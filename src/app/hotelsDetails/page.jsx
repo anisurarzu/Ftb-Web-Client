@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import dayjs from "dayjs";
 import {
   StarFilled,
@@ -22,7 +22,8 @@ import { useAuth } from "@/context/AuthContext";
 
 const { Panel } = Collapse;
 
-export default function HotelsDetailsPage() {
+// Main content component that uses useSearchParams
+const HotelsDetailsContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -30,12 +31,16 @@ export default function HotelsDetailsPage() {
   const [selectedRooms, setSelectedRooms] = useState([]);
   const [expandedRoom, setExpandedRoom] = useState(null);
   const [searchCriteria] = useState({
-    location: "Cox's Bazar",
-    checkIn: dayjs(),
-    checkOut: dayjs().add(1, "day"),
-    rooms: 1,
-    adults: 2,
-    children: 0,
+    location: searchParams.get("location") || "Cox's Bazar",
+    checkIn: searchParams.get("checkIn")
+      ? dayjs(searchParams.get("checkIn"))
+      : dayjs(),
+    checkOut: searchParams.get("checkOut")
+      ? dayjs(searchParams.get("checkOut"))
+      : dayjs().add(1, "day"),
+    rooms: parseInt(searchParams.get("rooms") || 1),
+    adults: parseInt(searchParams.get("adults") || 2),
+    children: parseInt(searchParams.get("children") || 0),
   });
 
   const { user } = useAuth();
@@ -88,22 +93,10 @@ export default function HotelsDetailsPage() {
           },
         ],
       },
-      // ... other room types ...
     ],
-    whatsNearby: [
-      { name: "Paluarick Sea Beach", distance: "4.1 km" },
-      // ... other nearby places ...
-    ],
-    facilities: [
-      "Clothes Diver",
-      "Large Vehicle Parking",
-      // ... other facilities ...
-    ],
-    policies: [
-      "Check-in: 2:00 PM",
-      "Check-out: 12:00 PM",
-      // ... other policies ...
-    ],
+    whatsNearby: [{ name: "Paluarick Sea Beach", distance: "4.1 km" }],
+    facilities: ["Clothes Diver", "Large Vehicle Parking"],
+    policies: ["Check-in: 2:00 PM", "Check-out: 12:00 PM"],
   };
 
   const nights = searchCriteria.checkOut.diff(searchCriteria.checkIn, "day");
@@ -145,7 +138,6 @@ export default function HotelsDetailsPage() {
       return;
     }
 
-    // Prepare complete booking data with all required fields
     const bookingPayload = {
       selectedRooms: selectedRooms.map((room) => ({
         roomTypeId: room.roomTypeId,
@@ -170,7 +162,6 @@ export default function HotelsDetailsPage() {
     };
 
     try {
-      // Verify all required fields are present
       const requiredFields = [
         "selectedRooms",
         "hotelName",
@@ -221,7 +212,32 @@ export default function HotelsDetailsPage() {
   };
 
   if (loading) {
-    return <LoadingSkeleton searchCriteria={searchCriteria} />;
+    return (
+      <div className="bg-[#EBF0F4] min-h-screen">
+        <div className="max-w-6xl mx-auto p-4 font-sans">
+          <div className="mt-12">
+            <SearchBooking2
+              initialValues={{
+                location: searchCriteria.location,
+                checkInDate: searchCriteria.checkIn,
+                checkOutDate: searchCriteria.checkOut,
+                rooms: searchCriteria.rooms,
+                adults: searchCriteria.adults,
+                children: searchCriteria.children,
+              }}
+            />
+          </div>
+          <div className="bg-white p-8 rounded-lg shadow-sm mt-6">
+            <div className="animate-pulse space-y-6">
+              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-96 bg-gray-200 rounded"></div>
+              <div className="h-64 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -491,33 +507,18 @@ export default function HotelsDetailsPage() {
       </div>
     </div>
   );
-}
+};
 
-function LoadingSkeleton({ searchCriteria }) {
+// Main page component with Suspense boundary
+export default function HotelsDetailsPage() {
   return (
-    <div className="bg-[#EBF0F4] min-h-screen">
-      <div className="max-w-6xl mx-auto p-4 font-sans">
-        <div className="mt-12">
-          <SearchBooking2
-            initialValues={{
-              location: searchCriteria.location,
-              checkInDate: searchCriteria.checkIn,
-              checkOutDate: searchCriteria.checkOut,
-              rooms: searchCriteria.rooms,
-              adults: searchCriteria.adults,
-              children: searchCriteria.children,
-            }}
-          />
+    <Suspense
+      fallback={
+        <div className="bg-[#EBF0F4] min-h-screen flex items-center justify-center">
+          <div className="text-xl">Loading hotel details...</div>
         </div>
-        <div className="bg-white p-8 rounded-lg shadow-sm mt-6">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-96 bg-gray-200 rounded"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+      }>
+      <HotelsDetailsContent />
+    </Suspense>
   );
 }

@@ -1,15 +1,15 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import dayjs from "dayjs";
 import { StarFilled, FilterOutlined, CrownFilled } from "@ant-design/icons";
 import { Skeleton, Divider, Checkbox, Slider, Input, notification } from "antd";
 import { useSearchParams } from "next/navigation";
 import SearchBooking2 from "@/components/Homepage/SearchBooking2";
 import coreAxios from "@/components/coreAxios/Axios";
-// import coreAxios from "@/utils/axiosInstance";
 import { useRouter } from "next/navigation";
 
-export default function HotelListingPage() {
+// Main component that uses useSearchParams
+const HotelListingContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = React.useState(true);
@@ -503,5 +503,19 @@ export default function HotelListingPage() {
         </div>
       </div>
     </div>
+  );
+};
+
+// Main page component with Suspense boundary
+export default function HotelListingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-[#EBF0F4] min-h-screen flex items-center justify-center">
+          <div className="text-xl">Loading hotel listings...</div>
+        </div>
+      }>
+      <HotelListingContent />
+    </Suspense>
   );
 }

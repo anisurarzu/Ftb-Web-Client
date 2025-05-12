@@ -245,9 +245,9 @@ export default function CheckoutPage() {
         extraBedTotalBill: extraBedTotalBill,
 
         // Booking Metadata
-        bookedBy: user?.name || "N/A",
-        bookedByID: user?.id || "N/A",
-        updatedByID: user?.id || "N/A",
+        bookedBy: user?.username || "N/A",
+        bookedByID: user?._id || "N/A",
+        updatedByID: user?._id || "N/A",
         bookingID: `BID-${Date.now()}`,
         bookingNo: `BN-${Math.floor(100000 + Math.random() * 900000)}`,
         serialNo: Math.floor(1000 + Math.random() * 9000),
