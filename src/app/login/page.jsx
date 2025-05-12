@@ -119,7 +119,7 @@ const LoginContent = () => {
         router.push(redirect);
         
         // Force a full page reload after redirect
-        window.location.reload();
+        // window.location.reload();
       }
     } catch (error) {
       notification.error({
