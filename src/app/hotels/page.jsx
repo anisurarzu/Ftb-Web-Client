@@ -59,8 +59,8 @@ const HotelListingContent = () => {
     const mockHotels = [
       {
         id: 1,
-        name: "Sea Pearl Beach Resort & Spa Cox's Bazar",
-        location: "Inan, Cox's Bazar",
+        name: "Samudra Bari",
+        location: "Cox's Bazar",
         amenities: [
           "Couple Friendly",
           "Accessible Bathroom",
@@ -71,12 +71,12 @@ const HotelListingContent = () => {
         discount: "Extra 5% discount for bKash payment.",
         rating: 4.2,
         image:
-          "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+          "https://i.ibb.co.com/rKFwNNhQ/SB-Front-side.jpg",
         topSelling: true,
       },
       {
         id: 2,
-        name: "Sayeman Beach Resort",
+        name: "Shopno Bilash Holiday Suites",
         location: "Kolatoli, Cox's Bazar",
         amenities: [
           "Garden",
@@ -88,50 +88,34 @@ const HotelListingContent = () => {
         discount: "Extra 5% discount for bKash payment.",
         rating: 4.0,
         image:
-          "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+          "https://i.ibb.co.com/ds58jv8S/Shopno-Bilash-Front-Desk.jpg",
         topSelling: false,
       },
       {
         id: 3,
-        name: "Hotel The Cox Today",
+        name: "Sea Paradise",
         location: "Marine Drive, Cox's Bazar",
         amenities: ["Free WiFi", "Restaurant", "Sea View", "24/7 Front Desk"],
         price: 4200,
         discount: "Book 2 nights get 1 night free",
         rating: 4.5,
         image:
-          "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+          "https://i.ibb.co.com/8DrSSwKB/Sea-paradise-1.jpg",
         topSelling: true,
       },
       {
         id: 4,
-        name: "Long Beach Hotel",
+        name: "Mermaid Bay Watch Resort",
         location: "Kolatali Point, Cox's Bazar",
         amenities: ["Private Beach", "Spa", "Bar", "Fitness Center"],
         price: 7200,
         discount: "Honeymoon package available",
         rating: 4.7,
         image:
-          "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+          "https://i.ibb.co.com/Rk2GQDqv/Mermaid-sea-view.jpg",
         topSelling: true,
       },
-      {
-        id: 5,
-        name: "Mermaid Beach Resort",
-        location: "Laboni Point, Cox's Bazar",
-        amenities: [
-          "Family Rooms",
-          "Beachfront",
-          "Breakfast Included",
-          "Parking",
-        ],
-        price: 4800,
-        discount: "Early bird discount 10%",
-        rating: 3.9,
-        image:
-          "https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-        topSelling: false,
-      },
+      
     ];
 
     return mockHotels.filter((hotel) =>

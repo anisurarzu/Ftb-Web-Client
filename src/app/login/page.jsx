@@ -107,16 +107,19 @@ const LoginContent = () => {
           placement: "topRight",
           duration: 3,
         });
-
+  
         // Store token and user info
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("userInfo", JSON.stringify(response.data));
-
+  
         // Update auth context
         login(response.data);
-
+  
         // Redirect to the intended page or profile
         router.push(redirect);
+        
+        // Force a full page reload after redirect
+        window.location.reload();
       }
     } catch (error) {
       notification.error({

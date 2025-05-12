@@ -48,21 +48,59 @@ const HotelsDetailsContent = () => {
   // Sample hotel data - replace with your actual data source
   const hotel = {
     id: 1,
-    name: "Sea Pearl Beach Resort & Spa Cox's Bazar",
-    location: "Jalapalong, Inani, Inani, Cox's Bazar, Bangladesh",
+    name: "Samudra Bari",
+    location: "Kalatoli, Cox's Bazar, Bangladesh",
     rating: 4.2,
     images: [
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
+      "https://i.ibb.co.com/rKFwNNhQ/SB-Front-side.jpg",
+      "https://i.ibb.co.com/846gxKts/SB-Front-Desk.jpg",
+      "https://i.ibb.co.com/JF8jL992/SB-Roof-Top.jpg",
     ],
     roomTypes: [
       {
         id: 1,
-        name: "Superior King Hill/Garden View",
-        description: "1 King Bed, Maximum Room Capacity: 2",
+        name: "2 Bed Apartment",
+        description: "2 King Bed, Maximum Room Capacity: 6",
         images: [
-          "https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-          "https://images.unsplash.com/photo-1582719471386-8d97177a3e9e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+          "https://i.ibb.co.com/tPx5Xfk1/SB-Living-Room-1.jpg ",
+          "https://i.ibb.co.com/YzxBDRg/SB-Bedroom-1.jpg",
+        ],
+        amenities: ["Ceiling Fan", "Air Conditioning", "Toiletries", "Wi-Fi"],
+        options: [
+          {
+            id: 1,
+            type: "Non-Refundable",
+            breakfast: false,
+            adults: 2,
+            description: "NO Complimentary BREAKFAST - Non refundable",
+            price: 5138,
+            originalPrice: 14230,
+            discountPercent: 63,
+            taxes: 1361,
+            discount: "Extra 5% discount for bKash payment.",
+            cancellation: "No cancellation",
+          },
+          {
+            id: 2,
+            type: "Refundable",
+            breakfast: true,
+            adults: 2,
+            description:
+              "Complimentary buffet breakfast with unlimited swimming pool & airport transfer",
+            price: 6719,
+            originalPrice: 14230,
+            taxes: 1780,
+            cancellation: "Free cancellation before 00:01 on Nov. 12 May 2025",
+          },
+        ],
+      },
+      {
+        id: 2,
+        name: "3 Bed Apartment",
+        description: "3 King Bed, Maximum Room Capacity: 6",
+        images: [
+          "https://i.ibb.co.com/YzxBDRg/SB-Bedroom-2.jpg",
+          "https://i.ibb.co.com/twQftC26/SB-Bedroom-3.jpg",
         ],
         amenities: ["Ceiling Fan", "Air Conditioning", "Toiletries", "Wi-Fi"],
         options: [
