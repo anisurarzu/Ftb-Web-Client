@@ -1,5 +1,8 @@
 "use client";
 
+// This ensures the page is not statically generated
+export const dynamic = "force-dynamic";
+
 import React, { useState, useEffect, Suspense } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
