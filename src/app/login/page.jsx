@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
@@ -10,7 +10,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import coreAxios from "../../../utils/axiosInstance";
 import { useAuth } from "@/context/AuthContext";
 
-export default function LoginPage() {
+// Main content component that uses useSearchParams
+const LoginContent = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -216,5 +217,23 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+};
+
+// Main page component with Suspense boundary
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-500">
+          <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg text-center">
+            <h2 className="text-2xl font-bold text-center text-gray-800">
+              Loading...
+            </h2>
+          </div>
+        </div>
+      }>
+      <LoginContent />
+    </Suspense>
   );
 }
