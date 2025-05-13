@@ -169,14 +169,9 @@ const Services = ({ hotelList }) => {
     <div className="text-slate-800 mb-24 bg-gray-200 py-12 px-4">
       <div className="text-center container mx-auto">
         <h3 className="text-2xl font-bold text-gray-800 relative inline-block">
-          Our Hotels
+          Our Properties
           <span className="block w-12 h-1 bg-teal-500 mx-auto mt-4"></span>
         </h3>
-        <p className="text-gray-600 max-w-2xl mx-auto mt-4">
-          Maecenas feugiat mattis ipsum, vitae semper massa porttitor sit amet.
-          Nulla mattis, urna et posuere ornare, neque leo dapibus ante, nec
-          dignissim.
-        </p>
       </div>
       <div className="container mx-auto mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 px-4 sm:px-10 md:px-20">
         {hotelList?.map((room) => (
