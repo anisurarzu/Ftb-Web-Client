@@ -1,4 +1,3 @@
-// pages/checkout.js
 "use client";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -42,8 +41,6 @@ export default function CheckoutPage() {
   const [extraBed, setExtraBed] = useState(false);
   const [error, setError] = useState(null);
 
-  console.log("user", user);
-
   useEffect(() => {
     const checkAuthAndData = () => {
       const token = localStorage.getItem("token");
@@ -68,7 +65,6 @@ export default function CheckoutPage() {
       try {
         const parsedData = JSON.parse(storedBookingData);
 
-        // Validate all required booking data
         const requiredFields = {
           selectedRooms: "array",
           hotelName: "string",
@@ -113,7 +109,6 @@ export default function CheckoutPage() {
           throw new Error("No rooms selected");
         }
 
-        // Validate room data
         const room = parsedData.selectedRooms[0];
         const requiredRoomFields = {
           roomTypeId: "string",
@@ -144,7 +139,6 @@ export default function CheckoutPage() {
           throw new Error(errorMessage);
         }
 
-        // Format dates properly
         parsedData.checkInDate = dayjs(parsedData.checkInDate).toISOString();
         parsedData.checkOutDate = dayjs(parsedData.checkOutDate).toISOString();
 
@@ -184,7 +178,6 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
-      // Final validation before submission
       if (!bookingData) {
         throw new Error("Booking data not loaded");
       }
@@ -204,32 +197,23 @@ export default function CheckoutPage() {
       const finalTotalBill = totalBill + kitchenTotalBill + extraBedTotalBill;
 
       const bookingPayload = {
-        // Guest Information
         fullName: values.fullName || "N/A",
         nidPassport: values.nidPassport || "N/A",
         address: values.address || "N/A",
         phone: values.phone || "N/A",
         email: values.email || "N/A",
-
-        // Hotel Information
         hotelName: bookingData.hotelName,
         hotelID: bookingData.hotelId,
-
-        // Room Information
         roomCategoryID: room.roomTypeId,
         roomCategoryName: room.roomType,
         roomNumberID: room.roomId,
         roomNumberName: room.roomNumber || "Not Specified",
         roomPrice: room.price,
-
-        // Dates and Stay Details
         checkInDate: bookingData.checkInDate,
         checkOutDate: bookingData.checkOutDate,
         nights: bookingData.nights,
         adults: values.adults || 1,
         children: values.children || 0,
-
-        // Payment Information
         totalBill: finalTotalBill,
         advancePayment: paymentMethod === "later" ? 0 : finalTotalBill,
         duePayment: paymentMethod === "later" ? finalTotalBill : 0,
@@ -237,14 +221,10 @@ export default function CheckoutPage() {
           paymentMethods.find((p) => p.value === paymentMethod)?.label ||
           "Pay Later",
         transactionId: values.transactionId || "N/A",
-
-        // Additional Services
         isKitchen: isKitchen,
         extraBed: extraBed,
         kitchenTotalBill: kitchenTotalBill,
         extraBedTotalBill: extraBedTotalBill,
-
-        // Booking Metadata
         bookedBy: user?.username || "N/A",
         bookedByID: user?._id || "N/A",
         updatedByID: user?._id || "N/A",
@@ -281,10 +261,9 @@ export default function CheckoutPage() {
 
   if (authLoading || pageLoading) {
     return (
-      <div className="bg-gray-50 min-h-screen py-8">
+      <div className="bg-gray-50 min-h-screen py-12">
         <div className="max-w-6xl mx-auto px-4">
           <Skeleton active paragraph={{ rows: 0 }} className="mb-8" />
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <Card>
@@ -297,7 +276,6 @@ export default function CheckoutPage() {
                 <Skeleton active paragraph={{ rows: 4 }} />
               </Card>
             </div>
-
             <div className="lg:col-span-1">
               <Card>
                 <Skeleton active paragraph={{ rows: 8 }} />
@@ -311,7 +289,7 @@ export default function CheckoutPage() {
 
   if (error) {
     return (
-      <div className="bg-gray-50 min-h-screen py-8">
+      <div className="bg-gray-50 min-h-screen py-12">
         <div className="max-w-6xl mx-auto px-4">
           <Alert
             message="Booking Error"
@@ -338,85 +316,90 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <Title level={2} className="text-3xl font-bold mb-6 text-gray-800">
-          Complete Your Booking
-        </Title>
+    <div className="bg-gray-50 min-h-screen py-12 font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mt-8 mb-10">
+          <Title
+            level={1}
+            className="text-4xl font-bold text-gray-800 mb-2 font-serif">
+            Complete Your Booking
+          </Title>
+          <Text className="text-lg text-gray-600">
+            Review your details and confirm your reservation
+          </Text>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Forms */}
           <div className="lg:col-span-2 space-y-6">
             {/* Guest Information Card */}
             <Card
               title={
-                <Text strong className="text-lg">
+                <Text className="text-xl font-semibold text-gray-800">
                   Guest Information
                 </Text>
               }
-              className="shadow-sm">
+              className="shadow-sm rounded-lg border-0"
+              headStyle={{
+                borderBottom: "1px solid #e5e7eb",
+                padding: "20px 24px",
+              }}
+              bodyStyle={{ padding: "24px" }}>
               <Form form={form} onFinish={handleSubmit} layout="vertical">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Form.Item
                     name="fullName"
-                    label={<Text strong>Full Name</Text>}
+                    label={
+                      <Text className="font-medium text-gray-700">
+                        Full Name
+                      </Text>
+                    }
                     rules={[
                       {
                         required: true,
                         message: "Please enter your full name",
                       },
                     ]}>
-                    <Input
-                      size="large"
-                      placeholder="John Doe"
-                      className="rounded-lg"
-                    />
+                    <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
                   <Form.Item
                     name="phone"
-                    label={<Text strong>Phone Number</Text>}
+                    label={
+                      <Text className="font-medium text-gray-700">
+                        Phone Number
+                      </Text>
+                    }
                     rules={[
                       {
                         required: true,
                         message: "Please enter your phone number",
                       },
                     ]}>
-                    <Input
-                      size="large"
-                      placeholder="+8801XXXXXXXXX"
-                      className="rounded-lg"
-                    />
+                    <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
                   <Form.Item
                     name="email"
-                    label={<Text strong>Email</Text>}
-                    rules={[
-                      { type: "email", message: "Please enter a valid email" },
-                    ]}>
-                    <Input
-                      size="large"
-                      placeholder="john@example.com"
-                      className="rounded-lg"
-                    />
+                    label={
+                      <Text className="font-medium text-gray-700">Email</Text>
+                    }>
+                    <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
                   <Form.Item
                     name="nidPassport"
-                    label={<Text strong>NID/Passport Number</Text>}>
-                    <Input
-                      size="large"
-                      placeholder="Enter NID or Passport"
-                      className="rounded-lg"
-                    />
+                    label={
+                      <Text className="font-medium text-gray-700">
+                        NID/Passport
+                      </Text>
+                    }>
+                    <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
                   <Form.Item
                     name="address"
-                    label={<Text strong>Address</Text>}
+                    label={
+                      <Text className="font-medium text-gray-700">Address</Text>
+                    }
                     className="md:col-span-2">
-                    <Input.TextArea
-                      rows={3}
-                      placeholder="Your full address"
-                      className="rounded-lg"
-                    />
+                    <Input.TextArea rows={3} className="rounded-lg" />
                   </Form.Item>
                 </div>
               </Form>
@@ -425,69 +408,70 @@ export default function CheckoutPage() {
             {/* Stay Details Card */}
             <Card
               title={
-                <Text strong className="text-lg">
+                <Text className="text-xl font-semibold text-gray-800">
                   Stay Details
                 </Text>
               }
-              className="shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              className="shadow-sm rounded-lg border-0"
+              headStyle={{
+                borderBottom: "1px solid #e5e7eb",
+                padding: "20px 24px",
+              }}
+              bodyStyle={{ padding: "24px" }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Form.Item
                   name="adults"
-                  label={<Text strong>Adults</Text>}
+                  label={
+                    <Text className="font-medium text-gray-700">Adults</Text>
+                  }
                   initialValue={1}>
                   <InputNumber
                     min={1}
                     max={10}
                     size="large"
-                    className="w-full rounded-lg"
+                    className="w-full rounded-lg h-12"
                   />
                 </Form.Item>
                 <Form.Item
                   name="children"
-                  label={<Text strong>Children</Text>}
+                  label={
+                    <Text className="font-medium text-gray-700">Children</Text>
+                  }
                   initialValue={0}>
                   <InputNumber
                     min={0}
                     max={10}
                     size="large"
-                    className="w-full rounded-lg"
+                    className="w-full rounded-lg h-12"
                   />
                 </Form.Item>
-                <Form.Item
-                  label={<Text strong>Kitchen Facility</Text>}
-                  className="md:col-span-2">
+                <div className="md:col-span-2 flex items-center">
                   <Switch
                     checked={isKitchen}
                     onChange={setIsKitchen}
-                    checkedChildren="Yes"
-                    unCheckedChildren="No"
+                    className="mr-3"
                   />
-                  <Text className="ml-2 text-gray-600">
-                    Include kitchen facility (BDT 500)
+                  <Text className="text-gray-700">
+                    Kitchen Facility (+BDT 500)
                   </Text>
-                </Form.Item>
-                <Form.Item
-                  label={<Text strong>Extra Bed</Text>}
-                  className="md:col-span-2">
+                </div>
+                <div className="md:col-span-2 flex items-center">
                   <Switch
                     checked={extraBed}
                     onChange={setExtraBed}
-                    checkedChildren="Yes"
-                    unCheckedChildren="No"
+                    className="mr-3"
                   />
-                  <Text className="ml-2 text-gray-600">
-                    Include extra bed (BDT 1000)
-                  </Text>
-                </Form.Item>
+                  <Text className="text-gray-700">Extra Bed (+BDT 1000)</Text>
+                </div>
                 <Form.Item
                   name="note"
-                  label={<Text strong>Special Requests</Text>}
+                  label={
+                    <Text className="font-medium text-gray-700">
+                      Special Requests
+                    </Text>
+                  }
                   className="md:col-span-2">
-                  <Input.TextArea
-                    rows={3}
-                    placeholder="Any special requests or notes?"
-                    className="rounded-lg"
-                  />
+                  <Input.TextArea rows={3} className="rounded-lg" />
                 </Form.Item>
               </div>
             </Card>
@@ -495,22 +479,31 @@ export default function CheckoutPage() {
             {/* Payment Card */}
             <Card
               title={
-                <Text strong className="text-lg">
+                <Text className="text-xl font-semibold text-gray-800">
                   Payment Details
                 </Text>
               }
-              className="shadow-sm">
+              className="shadow-sm rounded-lg border-0"
+              headStyle={{
+                borderBottom: "1px solid #e5e7eb",
+                padding: "20px 24px",
+              }}
+              bodyStyle={{ padding: "24px" }}>
               <Form.Item
                 name="paymentMethod"
-                label={<Text strong>Select Payment Method</Text>}
+                label={
+                  <Text className="font-medium text-gray-700">
+                    Payment Method
+                  </Text>
+                }
                 initialValue="later"
                 rules={[
-                  { required: true, message: "Please select a payment method" },
+                  { required: true, message: "Please select payment method" },
                 ]}>
                 <Select
                   size="large"
-                  onChange={(value) => setPaymentMethod(value)}
-                  className="w-full rounded-lg">
+                  className="w-full rounded-lg h-12"
+                  onChange={(value) => setPaymentMethod(value)}>
                   {paymentMethods.map((method) => (
                     <Option key={method.value} value={method.value}>
                       {method.label}
@@ -520,44 +513,45 @@ export default function CheckoutPage() {
               </Form.Item>
 
               {paymentMethod !== "later" && (
-                <>
-                  <div className="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100">
-                    <Text strong className="block text-blue-800 mb-2 text-lg">
+                <div className="mt-6">
+                  <div className="bg-blue-50 p-5 rounded-lg mb-6 border border-blue-100">
+                    <Text className="block text-blue-800 font-medium mb-2 text-lg">
                       Payment Instructions
                     </Text>
-                    <Text className="text-blue-700 block">
-                      Please send{" "}
-                      {paymentMethod === "Bank" ? "the payment" : "money"} to:
+                    <Text className="text-blue-700 block mb-1">
+                      Send payment to:{" "}
+                      <span className="font-bold">
+                        {paymentMethod === "bKash"
+                          ? "bKash: 017XXXXXXXX"
+                          : paymentMethod === "Nagad"
+                          ? "Nagad: 017XXXXXXXX"
+                          : "Bank: ABC Bank, Account: 1234567890"}
+                      </span>
                     </Text>
-                    <Text className="font-bold text-blue-800 my-2 block text-lg">
-                      {paymentMethod === "bKash"
-                        ? "bKash: 017XXXXXXXX"
-                        : paymentMethod === "Nagad"
-                        ? "Nagad: 017XXXXXXXX"
-                        : "Bank: ABC Bank, Account: 1234567890"}
-                    </Text>
                     <Text className="text-blue-700 block">
-                      Use your booking ID as reference. After payment, please
-                      enter the transaction ID below.
+                      Use booking ID as reference
                     </Text>
                   </div>
-
                   <Form.Item
                     name="transactionId"
-                    label={<Text strong>Transaction ID</Text>}
-                    rules={[
-                      {
-                        required: paymentMethod !== "later",
-                        message: "Please enter your transaction ID",
-                      },
-                    ]}>
-                    <Input
-                      size="large"
-                      placeholder="Enter transaction ID"
-                      className="rounded-lg"
-                    />
+                    label={
+                      <Text className="font-medium text-gray-700">
+                        Transaction ID
+                      </Text>
+                    }
+                    rules={
+                      paymentMethod !== "later"
+                        ? [
+                            {
+                              required: true,
+                              message: "Please enter transaction ID",
+                            },
+                          ]
+                        : []
+                    }>
+                    <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
-                </>
+                </div>
               )}
             </Card>
           </div>
@@ -566,60 +560,67 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <Card
               title={
-                <Text strong className="text-lg">
+                <Text className="text-xl font-semibold text-gray-800">
                   Booking Summary
                 </Text>
               }
-              className="shadow-sm sticky top-4">
-              <div className="space-y-4">
+              className="shadow-lg rounded-lg border-0 sticky top-8"
+              headStyle={{
+                borderBottom: "1px solid #e5e7eb",
+                padding: "20px 24px",
+              }}
+              bodyStyle={{ padding: "24px" }}>
+              <div className="space-y-5">
                 <div>
-                  <Text strong className="text-gray-700 block text-base">
+                  <Text className="text-gray-500 text-sm font-medium">
                     Hotel
                   </Text>
-                  <Text className="text-gray-900 text-lg font-medium">
+                  <Text className="text-gray-900 text-lg font-semibold">
                     {bookingData.hotelName}
                   </Text>
                 </div>
 
-                <Divider className="my-3" />
+                <Divider className="my-4" />
 
-                <div>
-                  <Text strong className="text-gray-700 block text-base">
+                <div className="space-y-3">
+                  <Text className="text-gray-500 text-sm font-medium">
                     Dates
                   </Text>
-                  <div className="flex justify-between mt-1">
+                  <div className="flex justify-between">
                     <Text className="text-gray-600">Check-in:</Text>
-                    <Text className="text-gray-900">
+                    <Text className="text-gray-900 font-medium">
                       {dayjs(bookingData.checkInDate).format("DD MMM YYYY")}
                     </Text>
                   </div>
-                  <div className="flex justify-between mt-1">
+                  <div className="flex justify-between">
                     <Text className="text-gray-600">Check-out:</Text>
-                    <Text className="text-gray-900">
+                    <Text className="text-gray-900 font-medium">
                       {dayjs(bookingData.checkOutDate).format("DD MMM YYYY")}
                     </Text>
                   </div>
-                  <div className="flex justify-between mt-1">
+                  <div className="flex justify-between">
                     <Text className="text-gray-600">Nights:</Text>
-                    <Text className="text-gray-900">{bookingData.nights}</Text>
+                    <Text className="text-gray-900 font-medium">
+                      {bookingData.nights}
+                    </Text>
                   </div>
                 </div>
 
-                <Divider className="my-3" />
+                <Divider className="my-4" />
 
                 <div>
-                  <Text strong className="text-gray-700 block text-base mb-2">
+                  <Text className="text-gray-500 text-sm font-medium mb-3">
                     Room Details
                   </Text>
                   {bookingData.selectedRooms.map((room, index) => (
                     <div key={index} className="mb-4">
-                      <Text strong className="block text-gray-800">
+                      <Text className="block text-gray-900 font-medium">
                         {room.roomType}
                       </Text>
-                      <Text className="text-gray-600 text-sm block">
+                      <Text className="text-gray-500 text-sm">
                         {room.description}
                       </Text>
-                      <Text strong className="block mt-2 text-lg">
+                      <Text className="block mt-2 text-lg font-semibold">
                         BDT {room.price.toLocaleString()}
                       </Text>
                     </div>
@@ -627,24 +628,24 @@ export default function CheckoutPage() {
                 </div>
 
                 {isKitchen && (
-                  <div className="flex justify-between pt-2">
+                  <div className="flex justify-between pt-1">
                     <Text className="text-gray-600">Kitchen Facility:</Text>
-                    <Text>BDT 500</Text>
+                    <Text className="font-medium">BDT 500</Text>
                   </div>
                 )}
 
                 {extraBed && (
                   <div className="flex justify-between">
                     <Text className="text-gray-600">Extra Bed:</Text>
-                    <Text>BDT 1,000</Text>
+                    <Text className="font-medium">BDT 1,000</Text>
                   </div>
                 )}
 
-                <Divider className="my-3" />
+                <Divider className="my-4" />
 
-                <div className="flex justify-between font-bold text-lg pt-2">
-                  <Text>Total Amount:</Text>
-                  <Text>
+                <div className="flex justify-between items-center pt-2">
+                  <Text className="text-lg font-semibold">Total Amount:</Text>
+                  <Text className="text-2xl font-bold text-blue-600">
                     BDT{" "}
                     {(
                       bookingData.selectedRooms.reduce(
@@ -662,7 +663,7 @@ export default function CheckoutPage() {
                   htmlType="submit"
                   loading={submitting}
                   onClick={() => form.submit()}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-bold h-auto mt-4 text-lg border-0"
+                  className="w-full bg-blue-600 hover:bg-blue-700 h-14 rounded-lg mt-6 text-lg font-semibold"
                   size="large">
                   {submitting ? "Processing..." : "Confirm Booking"}
                 </Button>

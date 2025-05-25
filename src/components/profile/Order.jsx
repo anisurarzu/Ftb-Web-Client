@@ -20,7 +20,7 @@ const Order = () => {
 
   const getUserBookingByID = async () => {
     try {
-      const res = await coreAxios.get(`/user-booking/${userInfo?._id}`);
+      const res = await coreAxios.get(`/bookings/user/${userInfo?._id}`);
       if (res?.status === 200) {
         setUserBooking(res?.data);
       }

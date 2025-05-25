@@ -15,21 +15,14 @@ import Link from "next/link";
 import { FiUser } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [token, setToken] = useState(null);
-
-  const pathname = usePathname(); // dynamically updates on navigation
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-      setToken(token);
-    }
-  }, []);
+  const { user, logout } = useAuth();
+  const pathname = usePathname();
 
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
@@ -64,8 +57,7 @@ export default function Navbar() {
   ];
 
   const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/";
+    logout();
   };
 
   return (
@@ -131,7 +123,7 @@ export default function Navbar() {
 
             {/* Auth Buttons */}
             <div className="ml-6 flex items-center space-x-3">
-              {token ? (
+              {user ? (
                 <>
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -141,7 +133,7 @@ export default function Navbar() {
                         type="text"
                         className="flex items-center text-[#061A6E] hover:text-[#061A6E] hover:bg-gray-100 px-4 py-1 rounded-lg font-['Inter']"
                         icon={<FiUser className="mr-2" />}>
-                        Profile
+                        {user.name || "Profile"}
                       </Button>
                     </Link>
                   </motion.div>
@@ -177,7 +169,7 @@ export default function Navbar() {
 
           {/* Mobile menu button */}
           <div className="lg:hidden flex items-center space-x-4">
-            {token && (
+            {user && (
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Link href="/profile">
                   <FiUser className="h-5 w-5 text-[#061A6E]" />
@@ -244,7 +236,7 @@ export default function Navbar() {
           </div>
 
           <div className="p-4 border-t border-gray-200">
-            {token ? (
+            {user ? (
               <motion.div
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}>
