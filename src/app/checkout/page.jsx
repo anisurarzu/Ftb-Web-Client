@@ -239,7 +239,7 @@ export default function CheckoutPage() {
         createTime: new Date(),
       };
 
-      const response = await coreAxios.post("/booking", bookingPayload);
+      const response = await coreAxios.post("/web/booking", bookingPayload);
 
       Modal.success({
         title: "Booking Confirmed!",

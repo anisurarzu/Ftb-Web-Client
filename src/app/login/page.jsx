@@ -25,17 +25,23 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const { data } = await coreAxios.post("/auth/web-login", values);
-
+  
       message.success("Login successful!");
-
-      // Store token and user data
+  
+      // Save token and user info
       localStorage.setItem("token", data.token);
-      login({
-        ...data.user,
-        token: data.token,
-      });
-
-      // Redirect to the original requested page or home
+      localStorage.setItem("userInfo", JSON.stringify({
+        _id: data._id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        username: data.username,
+        email: data.email,
+        loginHistory: data.loginHistory,
+      }));
+  
+      // Update auth context
+      login({ ...data });
+  
       router.push(redirectTo);
     } catch (error) {
       console.error("Login error:", error);
@@ -46,6 +52,7 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

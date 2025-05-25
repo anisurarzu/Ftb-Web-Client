@@ -1,7 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Spin, Steps, Card, Button, Badge, Avatar, Divider } from "antd";
+import {
+  Spin,
+  Steps,
+  Card,
+  Button,
+  Badge,
+  Avatar,
+  Divider,
+  Skeleton,
+} from "antd";
 import {
   FaClipboardList,
   FaHeart,
@@ -25,6 +34,7 @@ import {
   FaMailBulk,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
+import coreAxios from "@/components/coreAxios/Axios";
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -33,75 +43,40 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
   const router = useRouter();
 
-  // Sample booking data
-  const sampleBookings = [
-    {
-      _id: "6832a9923c6173de6a00c061",
-      fullName: "Anisur Rahman Arzu",
-      phone: "+8801313214171",
-      email: "shakibanis1234@gmail.com",
-      hotelName: "Samudra Bari",
-      roomCategoryName: "2 Bed Apartment",
-      roomNumberName: "RN-1748150645080-1",
-      roomPrice: 5138,
-      checkInDate: "2025-05-24T18:00:00.000Z",
-      checkOutDate: "2025-05-25T18:00:00.000Z",
-      nights: 1,
-      adults: 1,
-      children: 0,
-      totalBill: 6638,
-      paymentMethod: "Pay Later at Hotel",
-      bookingID: "BID-1748150673870",
-      bookingNo: "25052502",
-      statusID: 1,
-      isKitchen: true,
-      extraBed: true,
-      kitchenTotalBill: 500,
-      extraBedTotalBill: 1000,
-    },
-    {
-      _id: "68329d82412e0706ea12d54a",
-      fullName: "Anisur Rahman Arzu",
-      phone: "+8801313214171",
-      email: "shakibanis1234@gmail.com",
-      hotelName: "Samudra Bari",
-      roomCategoryName: "2 Bed Apartment",
-      roomNumberName: "RN-1748147531354-1",
-      roomPrice: 5138,
-      checkInDate: "2025-05-24T18:00:00.000Z",
-      checkOutDate: "2025-05-25T18:00:00.000Z",
-      nights: 1,
-      adults: 1,
-      children: 0,
-      totalBill: 5138,
-      paymentMethod: "Pay Later at Hotel",
-      bookingID: "BID-1748147585436",
-      bookingNo: "25052501",
-      statusID: 1,
-      isKitchen: false,
-      extraBed: false,
-      kitchenTotalBill: 0,
-      extraBedTotalBill: 0,
-    },
-  ];
-
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-      const token = localStorage.getItem("token");
-      setTimeout(() => {
+    const fetchUserData = async () => {
+      if (typeof window !== "undefined") {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const token = localStorage.getItem("token");
+
         if (!token) {
           router.push("/login");
-        } else {
-          setUser(userInfo?.username);
-          setMail(userInfo?.email);
-          setBookings(sampleBookings);
-          setLoading(false);
+          return;
         }
-      }, 1000);
-    }
+
+        setUser(userInfo?.username);
+        setMail(userInfo?.email);
+
+        try {
+          setBookingsLoading(true);
+          const response = await coreAxios.get(
+            `/web/bookings/user/${userInfo?._id}`
+          );
+          setBookings(response.data || []);
+        } catch (error) {
+          console.error("Failed to fetch bookings:", error);
+          setBookings([]);
+        } finally {
+          setLoading(false);
+          setBookingsLoading(false);
+        }
+      }
+    };
+
+    fetchUserData();
   }, [router]);
 
   const tabs = [
@@ -290,6 +265,19 @@ export default function ProfilePage() {
   };
 
   const BookingListCard = () => {
+    if (bookingsLoading) {
+      return (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-[#061A6E]">Your Bookings</h2>
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="hover:shadow-lg transition-shadow">
+              <Skeleton active paragraph={{ rows: 4 }} />
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-[#061A6E]">Your Bookings</h2>
@@ -297,7 +285,10 @@ export default function ProfilePage() {
         {bookings.length === 0 ? (
           <Card className="text-center py-12">
             <p className="text-gray-500">{`You don't have any bookings yet`}</p>
-            <Button type="primary" className="mt-4 bg-[#061A6E]">
+            <Button
+              type="primary"
+              className="mt-4 bg-[#061A6E]"
+              onClick={() => router.push("/hotels")}>
               Explore Hotels
             </Button>
           </Card>
@@ -381,6 +372,28 @@ export default function ProfilePage() {
   };
 
   const AccountCard = () => {
+    if (loading) {
+      return (
+        <div className="space-y-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <Skeleton.Avatar active size={96} />
+            <Skeleton active paragraph={{ rows: 2 }} />
+          </div>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-4">
+              <Skeleton.Input active block style={{ height: 28, width: 200 }} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2].map((j) => (
+                  <Skeleton key={j} active paragraph={{ rows: 2 }} />
+                ))}
+              </div>
+              {i < 3 && <Divider />}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -439,7 +452,10 @@ export default function ProfilePage() {
           Your Wish List
         </h2>
         <p className="text-gray-600 mb-6">{`You don't have any saved hotels yet`}</p>
-        <Button type="primary" className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10">
+        <Button
+          type="primary"
+          className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10"
+          onClick={() => router.push("/hotels")}>
           Explore Hotels
         </Button>
       </div>
