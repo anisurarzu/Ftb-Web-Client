@@ -23,7 +23,7 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const paymentMethods = [
-  { value: "later", label: "Pay Later at Hotel" },
+ 
   { value: "bKash", label: "bKash" },
   { value: "Nagad", label: "Nagad" },
   { value: "Bank", label: "Bank Transfer" },

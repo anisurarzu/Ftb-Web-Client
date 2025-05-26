@@ -52,7 +52,7 @@ export default function Navbar() {
   const menuItems = [
     { label: "Home", href: "/", icon: <HomeOutlined /> },
     { label: "About", href: "/about", icon: <InfoCircleOutlined /> },
-    { label: "Services", href: "/service", icon: <AppstoreAddOutlined /> },
+    // { label: "Services", href: "/service", icon: <AppstoreAddOutlined /> },s
     { label: "Contact", href: "/contact", icon: <PhoneOutlined /> },
   ];
 
