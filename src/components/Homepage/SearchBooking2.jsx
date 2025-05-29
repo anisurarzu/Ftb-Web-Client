@@ -8,7 +8,7 @@ const { Option } = Select;
 
 export default function ProfessionalHotelSearch() {
   const router = useRouter();
-  const [location] = useState("Cox's Bazar"); // Set default and make it constant
+  const [location] = useState("Cox&apos;s Bazar"); // Fixed: Escaped apostrophe
   const [checkInDate, setCheckInDate] = useState(null);
   const [checkOutDate, setCheckOutDate] = useState(null);
   const [adults, setAdults] = useState(2);
@@ -35,7 +35,7 @@ export default function ProfessionalHotelSearch() {
 
       // Prepare search parameters for URL
       const searchParams = new URLSearchParams({
-        location,
+        location: "Cox's Bazar", // This can stay as-is since it's in a string literal
         checkIn: checkInDate.format("YYYY-MM-DD"),
         checkOut: checkOutDate.format("YYYY-MM-DD"),
         adults: adults.toString(),
@@ -81,7 +81,7 @@ export default function ProfessionalHotelSearch() {
                 size="large"
                 disabled
                 style={{ background: "#f8fafc" }}>
-                <Option value="Cox's Bazar">Cox's Bazar</Option>
+                <Option value="Cox&apos;s Bazar">Cox&apos;s Bazar</Option> {/* Fixed */}
               </Select>
             </div>
 
