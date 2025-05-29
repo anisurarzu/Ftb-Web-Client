@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useEffect } from "react";
 import dayjs from "dayjs";
 import {
   StarFilled,
@@ -14,23 +14,26 @@ import {
   PrinterOutlined,
   DownOutlined,
   UpOutlined,
+  ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Carousel, Collapse, Divider, Button, Modal } from "antd";
-import SearchBooking2 from "@/components/Homepage/SearchBooking2";
+import { Carousel, Divider, Button, Modal, Spin, Tabs, Tag } from "antd";
+
 import { useAuth } from "@/context/AuthContext";
+import coreAxios from "@/components/coreAxios/Axios";
 
-const { Panel } = Collapse;
-
-// Main content component that uses useSearchParams
 const HotelsDetailsContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [hotel, setHotel] = useState(null);
+  const [error, setError] = useState(null);
   const [favorite, setFavorite] = useState(false);
   const [selectedRooms, setSelectedRooms] = useState([]);
-  const [expandedRoom, setExpandedRoom] = useState(null);
-  const [searchCriteria] = useState({
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const { user } = useAuth();
+
+  const searchCriteria = {
     location: searchParams.get("location") || "Cox's Bazar",
     checkIn: searchParams.get("checkIn")
       ? dayjs(searchParams.get("checkIn"))
@@ -38,106 +41,34 @@ const HotelsDetailsContent = () => {
     checkOut: searchParams.get("checkOut")
       ? dayjs(searchParams.get("checkOut"))
       : dayjs().add(1, "day"),
-    rooms: parseInt(searchParams.get("rooms") || 1),
     adults: parseInt(searchParams.get("adults") || 2),
-    children: parseInt(searchParams.get("children") || 0),
-  });
-
-  const { user } = useAuth();
-
-  // Sample hotel data - replace with your actual data source
-  const hotel = {
-    id: 1,
-    name: "Samudra Bari",
-    location: "Kalatoli, Cox's Bazar, Bangladesh",
-    rating: 4.2,
-    images: [
-      "https://i.ibb.co.com/rKFwNNhQ/SB-Front-side.jpg",
-      "https://i.ibb.co.com/846gxKts/SB-Front-Desk.jpg",
-      "https://i.ibb.co.com/JF8jL992/SB-Roof-Top.jpg",
-    ],
-    roomTypes: [
-      {
-        id: 1,
-        name: "2 Bed Apartment",
-        description: "2 King Bed, Maximum Room Capacity: 6",
-        images: [
-          "https://i.ibb.co.com/tPx5Xfk1/SB-Living-Room-1.jpg ",
-          "https://i.ibb.co.com/YzxBDRg/SB-Bedroom-1.jpg",
-        ],
-        amenities: ["Ceiling Fan", "Air Conditioning", "Toiletries", "Wi-Fi"],
-        options: [
-          {
-            id: 1,
-            type: "Non-Refundable",
-            breakfast: false,
-            adults: 2,
-            description: "NO Complimentary BREAKFAST - Non refundable",
-            price: 5138,
-            originalPrice: 14230,
-            discountPercent: 63,
-            taxes: 1361,
-            discount: "Extra 5% discount for bKash payment.",
-            cancellation: "No cancellation",
-          },
-          {
-            id: 2,
-            type: "Refundable",
-            breakfast: true,
-            adults: 2,
-            description:
-              "Complimentary buffet breakfast with unlimited swimming pool & airport transfer",
-            price: 6719,
-            originalPrice: 14230,
-            taxes: 1780,
-            cancellation: "Free cancellation before 00:01 on Nov. 12 May 2025",
-          },
-        ],
-      },
-      {
-        id: 2,
-        name: "3 Bed Apartment",
-        description: "3 King Bed, Maximum Room Capacity: 6",
-        images: [
-          "https://i.ibb.co.com/YzxBDRg/SB-Bedroom-2.jpg",
-          "https://i.ibb.co.com/twQftC26/SB-Bedroom-3.jpg",
-        ],
-        amenities: ["Ceiling Fan", "Air Conditioning", "Toiletries", "Wi-Fi"],
-        options: [
-          {
-            id: 1,
-            type: "Non-Refundable",
-            breakfast: false,
-            adults: 2,
-            description: "NO Complimentary BREAKFAST - Non refundable",
-            price: 5138,
-            originalPrice: 14230,
-            discountPercent: 63,
-            taxes: 1361,
-            discount: "Extra 5% discount for bKash payment.",
-            cancellation: "No cancellation",
-          },
-          {
-            id: 2,
-            type: "Refundable",
-            breakfast: true,
-            adults: 2,
-            description:
-              "Complimentary buffet breakfast with unlimited swimming pool & airport transfer",
-            price: 6719,
-            originalPrice: 14230,
-            taxes: 1780,
-            cancellation: "Free cancellation before 00:01 on Nov. 12 May 2025",
-          },
-        ],
-      },
-    ],
-    whatsNearby: [{ name: "Paluarick Sea Beach", distance: "4.1 km" }],
-    facilities: ["Clothes Diver", "Large Vehicle Parking"],
-    policies: ["Check-in: 2:00 PM", "Check-out: 12:00 PM"],
   };
 
+  const hotelId = searchParams.get("id");
   const nights = searchCriteria.checkOut.diff(searchCriteria.checkIn, "day");
+
+  useEffect(() => {
+    const fetchHotelDetails = async () => {
+      try {
+        setLoading(true);
+        const { data } = await coreAxios.get(`/web-hotel-details/${hotelId}`);
+        setHotel(data);
+      } catch (err) {
+        console.error("Error fetching hotel details:", err);
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to load hotel details"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (hotelId) {
+      fetchHotelDetails();
+    }
+  }, [hotelId]);
 
   const toggleFavorite = () => setFavorite(!favorite);
 
@@ -163,8 +94,11 @@ const HotelsDetailsContent = () => {
     setSelectedRooms(newRooms);
   };
 
-  const toggleRoomExpand = (roomId) => {
-    setExpandedRoom(expandedRoom === roomId ? null : roomId);
+  const toggleDescription = (roomId) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [roomId]: !prev[roomId],
+    }));
   };
 
   const handleContinue = () => {
@@ -195,28 +129,10 @@ const HotelsDetailsContent = () => {
       checkOutDate: searchCriteria.checkOut.format("YYYY-MM-DD"),
       nights: nights,
       adults: searchCriteria.adults,
-      children: searchCriteria.children,
       timestamp: new Date().toISOString(),
     };
 
     try {
-      const requiredFields = [
-        "selectedRooms",
-        "hotelName",
-        "hotelId",
-        "checkInDate",
-        "checkOutDate",
-        "nights",
-      ];
-
-      const missingFields = requiredFields.filter(
-        (field) => !bookingPayload[field]
-      );
-
-      if (missingFields.length > 0) {
-        throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
-      }
-
       sessionStorage.setItem("bookingData", JSON.stringify(bookingPayload));
 
       if (!user) {
@@ -228,7 +144,11 @@ const HotelsDetailsContent = () => {
           cancelText: "Cancel",
           onOk() {
             modalInstance.destroy?.();
-            router.push("/login?redirect=/checkout");
+            router.push(
+              `/login?redirect=${encodeURIComponent(
+                window.location.pathname + window.location.search
+              )}`
+            );
           },
           onCancel() {
             modalInstance.destroy?.();
@@ -249,29 +169,101 @@ const HotelsDetailsContent = () => {
     }
   };
 
-  if (loading) {
+  // Skeleton Loading Component
+  const SkeletonLoading = () => (
+    <div className="bg-white p-6 rounded-lg shadow-sm mt-6">
+      {/* Header Skeleton */}
+      <div className="flex justify-between items-start mb-8">
+        <div className="space-y-2 w-3/4">
+          <div className="h-8 bg-gray-200 rounded w-2/3"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+      </div>
+
+      {/* Image Carousel Skeleton */}
+      <div className="h-96 bg-gray-200 rounded-lg mb-8"></div>
+
+      {/* Rooms Skeleton */}
+      <div className="space-y-6">
+        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className="border border-gray-200 rounded-lg overflow-hidden"
+            >
+              <div className="p-4 bg-white">
+                <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-full mb-3"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+              <div className="bg-gray-50 p-4 border-t border-gray-200">
+                <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[1, 2, 3, 4].map((amenity) => (
+                    <div
+                      key={amenity}
+                      className="h-6 bg-gray-200 rounded-full w-20"
+                    ></div>
+                  ))}
+                </div>
+                <div className="h-px bg-gray-200 my-3"></div>
+                <div className="space-y-3">
+                  {[1, 2].map((option) => (
+                    <div
+                      key={option}
+                      className="border border-gray-200 rounded-lg p-3 bg-white"
+                    >
+                      <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4 mb-3"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/4 mb-2"></div>
+                      <div className="flex justify-between">
+                        <div>
+                          <div className="h-4 bg-gray-200 rounded w-20 mb-1"></div>
+                          <div className="h-5 bg-gray-200 rounded w-24"></div>
+                        </div>
+                        <div className="h-8 bg-gray-200 rounded w-20"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (error) {
     return (
       <div className="bg-[#EBF0F4] min-h-screen">
+        <div className="flex items-center mb-6">
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => router.back()}
+            className="flex items-center text-gray-600 hover:text-gray-800"
+          >
+            Back
+          </Button>
+        </div>
         <div className="max-w-6xl mx-auto p-4 font-sans">
-          <div className="mt-12">
-            <SearchBooking2
-              initialValues={{
-                location: searchCriteria.location,
-                checkInDate: searchCriteria.checkIn,
-                checkOutDate: searchCriteria.checkOut,
-                rooms: searchCriteria.rooms,
-                adults: searchCriteria.adults,
-                children: searchCriteria.children,
-              }}
-            />
-          </div>
-          <div className="bg-white p-8 rounded-lg shadow-sm mt-6">
-            <div className="animate-pulse space-y-6">
-              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-96 bg-gray-200 rounded"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="bg-white p-8 rounded-lg shadow-sm mt-6 text-center">
+            <div className="text-red-500 mb-4">
+              <CloseOutlined className="text-2xl" />
+              <p className="mt-2">Failed to load hotel details</p>
             </div>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button
+              type="primary"
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Try Again
+            </Button>
           </div>
         </div>
       </div>
@@ -280,282 +272,407 @@ const HotelsDetailsContent = () => {
 
   return (
     <div className="bg-[#EBF0F4] min-h-screen">
+      <div className="flex items-center mb-6">
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => router.back()}
+          className="flex items-center text-gray-600 hover:text-gray-800"
+        >
+          Back
+        </Button>
+      </div>
       <div className="max-w-6xl mx-auto p-4 font-sans">
-        {/* Header Section */}
-        <div className="mt-12">
-          <SearchBooking2
-            initialValues={{
-              location: searchCriteria.location,
-              checkInDate: searchCriteria.checkIn,
-              checkOutDate: searchCriteria.checkOut,
-              rooms: searchCriteria.rooms,
-              adults: searchCriteria.adults,
-              children: searchCriteria.children,
-            }}
-          />
+        {/* Back Button */}
+        <div className="flex items-center mb-2">
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => router.back()}
+            className="flex items-center text-gray-600 hover:text-gray-800 font-medium"
+          >
+            Back to Results
+          </Button>
         </div>
 
-        {/* Hotel Details */}
-        <div className="bg-white p-6 rounded-lg shadow-sm mt-6">
-          {/* Hotel Header */}
-          <div className="mb-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-2xl font-bold mb-2">{hotel.name}</h1>
-                <div className="flex items-center text-gray-600">
-                  <StarFilled className="text-yellow-500 mr-1" />
-                  <span className="mr-3">{hotel.rating}</span>
-                  <EnvironmentFilled className="mr-1" />
-                  <span>{hotel.location}</span>
-                </div>
-              </div>
-              <button
-                onClick={toggleFavorite}
-                className="text-2xl text-red-500">
-                {favorite ? <HeartFilled /> : <HeartOutlined />}
-              </button>
-            </div>
-          </div>
-
-          {/* Main Hotel Image Carousel */}
-          <div className="relative mb-8">
-            <Carousel
-              arrows
-              prevArrow={<LeftOutlined />}
-              nextArrow={<RightOutlined />}
-              className="rounded-lg overflow-hidden">
-              {hotel.images.map((image, index) => (
-                <div key={index} className="h-96">
-                  <img
-                    src={image}
-                    alt={`${hotel.name} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </Carousel>
-          </div>
-
-          {/* Room Types Section */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-6">ROOMS</h2>
-
-            {hotel.roomTypes.map((room) => (
-              <div
-                key={room.id}
-                className="border border-gray-200 rounded-lg mb-6 overflow-hidden">
-                {/* Room Header */}
-                <div
-                  className="p-4 bg-white cursor-pointer"
-                  onClick={() => toggleRoomExpand(room.id)}>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-lg font-semibold">{room.name}</h3>
-                      <p className="text-gray-600">{room.description}</p>
-                    </div>
-                    {expandedRoom === room.id ? (
-                      <UpOutlined />
-                    ) : (
-                      <DownOutlined />
-                    )}
-                  </div>
-                </div>
-
-                {/* Expanded Room Content */}
-                {expandedRoom === room.id && (
-                  <div className="bg-gray-50 p-4 border-t border-gray-200">
-                    {/* Room Image Carousel */}
-                    <div className="mb-6">
-                      <Carousel
-                        arrows
-                        prevArrow={<LeftOutlined className="text-black" />}
-                        nextArrow={<RightOutlined className="text-black" />}
-                        className="rounded-lg overflow-hidden">
-                        {room.images.map((image, index) => (
-                          <div key={index} className="h-64">
-                            <img
-                              src={image}
-                              alt={`${room.name} ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ))}
-                      </Carousel>
-                    </div>
-
-                    {/* Room Amenities */}
-                    <div className="mb-6">
-                      <h4 className="font-medium mb-2">Room Amenities:</h4>
-                      <div className="flex flex-wrap gap-3">
-                        {room.amenities.map((amenity, index) => (
-                          <span
-                            key={index}
-                            className="flex items-center text-sm bg-gray-100 px-3 py-1 rounded-full">
-                            <CheckOutlined className="text-green-500 mr-1" />{" "}
-                            {amenity}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Divider className="my-4" />
-
-                    {/* Room Options */}
-                    <div className="space-y-4">
-                      {room.options.map((option) => (
-                        <div
-                          key={option.id}
-                          className="border border-gray-200 rounded-lg p-4 bg-white">
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <div className="flex items-center">
-                                <h4 className="font-medium mr-2">
-                                  {option.type}
-                                </h4>
-                                {option.type === "Non-Refundable" ? (
-                                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                    💬
-                                  </span>
-                                ) : (
-                                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                    💬
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center text-sm text-gray-600 mt-1">
-                                <span className="mr-2">
-                                  🔍 {option.adults} Adults
-                                </span>
-                                <span className="mr-2">|</span>
-                                <span>
-                                  🔍{" "}
-                                  {option.breakfast
-                                    ? "Breakfast Included"
-                                    : "Room Only"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <p className="text-sm text-gray-700 mb-2">
-                            {option.description}
-                          </p>
-
-                          {option.discountPercent && (
-                            <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded inline-block mb-2">
-                              {option.discountPercent}% off
-                            </div>
-                          )}
-
-                          <div className="flex justify-between items-end">
-                            <div>
-                              {option.discount && (
-                                <p className="text-xs text-blue-600 mb-1">
-                                  *{option.discount}
-                                </p>
-                              )}
-                              <p className="text-xs text-gray-500 line-through">
-                                Starts from BDT-
-                                {option.originalPrice.toLocaleString()}
-                              </p>
-                              <p className="text-lg font-bold">
-                                BDT {option.price.toLocaleString()}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                + BDT {option.taxes.toLocaleString()} Taxes &
-                                Fees for {nights}{" "}
-                                {nights > 1 ? "nights" : "night"}
-                              </p>
-                            </div>
-                            <button
-                              onClick={() => addRoom(option, room)}
-                              className="bg-[#FACC48] text-[#061A6E] px-4 py-2 rounded hover:bg-[#e6c042] font-medium transition-colors text-sm">
-                              Add Room
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Selected Rooms Summary */}
-          {selectedRooms.length > 0 && (
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 sticky bottom-0 z-10">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Booking Summary</h3>
-                <button className="text-blue-600 flex items-center text-sm">
-                  <PrinterOutlined className="mr-1" /> Print Summary
-                </button>
-              </div>
-
-              {selectedRooms.map((room, index) => (
-                <div key={index} className="border-b border-gray-200 pb-3 mb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start">
-                      <div className="w-16 h-16 rounded-md overflow-hidden mr-3">
+        {loading ? (
+          <SkeletonLoading />
+        ) : (
+          <div className="space-y-6">
+            {/* Part 1: Top Section */}
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                {/* Left Part: Slider */}
+                <div className="relative h-64 md:h-80">
+                  <Carousel
+                    arrows
+                    prevArrow={
+                      <LeftOutlined className="text-white bg-black bg-opacity-30 p-2 rounded-full" />
+                    }
+                    nextArrow={
+                      <RightOutlined className="text-white bg-black bg-opacity-30 p-2 rounded-full" />
+                    }
+                    className="rounded-lg overflow-hidden h-full"
+                  >
+                    {hotel.images.map((image, index) => (
+                      <div key={index} className="h-full">
                         <img
-                          src={room.roomImages[0]}
-                          alt={room.roomType}
-                          className="w-full h-full object-cover"
+                          src={image}
+                          alt={`${hotel.name} ${index + 1}`}
+                          className="w-full h-[320px] object-cover"
+                          loading="lazy"
                         />
                       </div>
-                      <div>
-                        <h4 className="font-medium text-sm">{room.roomType}</h4>
-                        <p className="text-xs text-gray-600">{room.type}</p>
-                        <p className="text-xs text-blue-600 mt-1">
-                          {room.discount}
-                        </p>
+                    ))}
+                  </Carousel>
+                </div>
+
+                {/* Right Part: Hotel Info */}
+                <div className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h1 className="text-xl font-bold mb-2 text-gray-800">
+                        {hotel.name}
+                      </h1>
+                      <div className="flex items-center text-gray-600 mb-3">
+                        <StarFilled className="text-yellow-500 mr-1" />
+                        <span className="mr-3 font-medium">{hotel.rating}</span>
+                        <EnvironmentFilled className="mr-1" />
+                        <span>{hotel.location}</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-sm">
-                        BDT {room.price.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        + BDT {room.taxes.toLocaleString()} Taxes & Fees
-                      </p>
-                      <button
-                        onClick={() => removeRoom(index)}
-                        className="text-red-500 text-xs mt-1">
-                        Remove
-                      </button>
+                    <button
+                      onClick={toggleFavorite}
+                      className="text-2xl hover:scale-110 transition-transform"
+                      aria-label={
+                        favorite ? "Remove from favorites" : "Add to favorites"
+                      }
+                    >
+                      {favorite ? (
+                        <HeartFilled className="text-red-500" />
+                      ) : (
+                        <HeartOutlined className="text-gray-400 hover:text-red-500" />
+                      )}
+                    </button>
+                  </div>
+
+                  <Divider className="my-3" />
+
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-gray-800">Facilities</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {hotel.facilities && hotel.facilities.length > 0 ? (
+                        hotel.facilities.slice(0, 6).map((facility, index) => (
+                          <Tag
+                            key={index}
+                            color="blue"
+                            className="flex items-center text-xs"
+                          >
+                            <CheckOutlined className="mr-1" />
+                            {facility}
+                          </Tag>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 text-sm">
+                          No facilities listed
+                        </p>
+                      )}
+                      {hotel.facilities && hotel.facilities.length > 6 && (
+                        <Tag className="text-xs">
+                          +{hotel.facilities.length - 6} more
+                        </Tag>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
 
-              <div className="flex justify-between items-center mt-4">
-                <p className="text-sm text-gray-600">
-                  {selectedRooms.length}{" "}
-                  {selectedRooms.length > 1 ? "rooms" : "room"} selected
-                </p>
-                <button
-                  onClick={handleContinue}
-                  className="bg-[#FACC48] text-[#061A6E] px-6 py-2 rounded hover:bg-[#e6c042] font-medium transition-colors">
-                  Continue
-                </button>
+                  <Divider className="my-3" />
+
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-2">
+                      Description
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {hotel.description || "No description available"}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
-        </div>
+
+            {/* Part 2: Bottom Section - Rooms */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              {/* <h2 className="text-xl font-semibold mb-6 text-gray-800">AVAILABLE ROOMS</h2> */}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {hotel.roomTypes.map((room) => (
+                  <div
+                    key={room.id}
+                    className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-300 bg-white"
+                  >
+                    {/* Room Header */}
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                        {room.name}
+                      </h3>
+
+                      {/* Room Image */}
+                      <div className="h-40 rounded-lg overflow-hidden mb-3">
+                        {room.roomImages && room.roomImages.length > 0 ? (
+                          <img
+                            src={room.roomImages[0]}
+                            alt={room.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                            <span className="text-gray-400">
+                              No image available
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Room Description with Read More */}
+                      <div className="mb-3">
+                        <p className="text-gray-600 text-sm">
+                          {expandedDescriptions[room.id]
+                            ? room.description
+                            : `${room.description.substring(0, 100)}${
+                                room.description.length > 100 ? "..." : ""
+                              }`}
+                        </p>
+                        {room.description.length > 100 && (
+                          <button
+                            onClick={() => toggleDescription(room.id)}
+                            className="text-blue-600 text-xs mt-1 hover:text-blue-800"
+                          >
+                            {expandedDescriptions[room.id]
+                              ? "Show less"
+                              : "Read more"}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Room Amenities */}
+                      <div className="mb-4">
+                        <h4 className="font-medium mb-2 text-sm text-gray-700">
+                          Room Amenities:
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {room.amenities && room.amenities.length > 0 ? (
+                            room.amenities.slice(0, 4).map((amenity, index) => (
+                              <span
+                                key={index}
+                                className="flex items-center text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700"
+                              >
+                                <CheckOutlined className="text-green-500 mr-1 text-xs" />
+                                {amenity}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-500">
+                              No amenities listed
+                            </span>
+                          )}
+                          {room.amenities && room.amenities.length > 4 && (
+                            <span className="text-xs text-gray-500">
+                              +{room.amenities.length - 4} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Room Options */}
+                      <div className="space-y-3">
+                        {room.options && room.options.length > 0 ? (
+                          room.options.map((option) => (
+                            <div
+                              key={option.id}
+                              className="border border-gray-200 rounded-lg p-3 bg-white hover:border-blue-200 transition-colors"
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <div className="flex items-center">
+                                    <h4 className="font-medium text-sm mr-2 text-gray-800">
+                                      {option.type}
+                                    </h4>
+                                    <span className="text-xs bg-gray-100 px-1 py-0.5 rounded text-gray-600">
+                                      {option.type === "Non-Refundable"
+                                        ? "Non-refundable"
+                                        : "Flexible"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center text-xs text-gray-600 mt-1">
+                                    <span className="mr-1">
+                                      {option.adults} Adults
+                                    </span>
+                                    <span className="mx-1">•</span>
+                                    <span>
+                                      {option.breakfast
+                                        ? "Breakfast Included"
+                                        : "Room Only"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {option.discountPercent && (
+                                <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded inline-block mb-2">
+                                  {option.discountPercent}% off
+                                </div>
+                              )}
+
+                              <div className="flex justify-between items-end">
+                                <div>
+                                  {option.discount && (
+                                    <p className="text-xs text-blue-600 mb-1">
+                                      *{option.discount}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-gray-500 line-through">
+                                    BDT{" "}
+                                    {option.originalPrice?.toLocaleString() ||
+                                      "0"}
+                                  </p>
+                                  <p className="text-base font-bold text-gray-800">
+                                    BDT {option.price?.toLocaleString() || "0"}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    + BDT{" "}
+                                    {option.taxes?.toLocaleString() || "0"}{" "}
+                                    taxes & fees
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => addRoom(option, room)}
+                                  className="bg-[#FACC48] hover:bg-[#e6c042] text-[#061A6E] px-3 py-1 rounded font-medium transition-colors text-xs shadow-sm"
+                                >
+                                  Select
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-4 text-gray-500">
+                            No room options available
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Selected Rooms Summary */}
+            {selectedRooms.length > 0 && (
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 sticky bottom-4 z-10 shadow-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Booking Summary
+                  </h3>
+                  <button className="text-blue-600 flex items-center text-sm hover:text-blue-800">
+                    <PrinterOutlined className="mr-1" /> Print Summary
+                  </button>
+                </div>
+
+                <div className="max-h-64 overflow-y-auto pr-2">
+                  {selectedRooms.map((room, index) => (
+                    <div
+                      key={index}
+                      className="border-b border-gray-200 pb-3 mb-3 last:border-b-0 last:mb-0 last:pb-0"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-start">
+                          <div className="w-16 h-16 rounded-md overflow-hidden mr-3 flex-shrink-0">
+                            {room.roomImages && room.roomImages.length > 0 ? (
+                              <img
+                                src={room.roomImages[0]}
+                                alt={room.roomType}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <span className="text-xs text-gray-500">
+                                  No image
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-sm text-gray-800">
+                              {room.roomType}
+                            </h4>
+                            <p className="text-xs text-gray-600">{room.type}</p>
+                            {room.discount && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                {room.discount}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-sm text-gray-800">
+                            BDT {room.price?.toLocaleString() || "0"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            + BDT {room.taxes?.toLocaleString() || "0"} taxes
+                          </p>
+                          <button
+                            onClick={() => removeRoom(index)}
+                            className="text-red-500 text-xs mt-1 hover:text-red-700"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200">
+                  <div>
+                    <p className="text-sm text-gray-600">
+                      {selectedRooms.length}{" "}
+                      {selectedRooms.length > 1 ? "rooms" : "room"} selected
+                    </p>
+                    <p className="text-sm font-semibold text-gray-800">
+                      Total: BDT{" "}
+                      {selectedRooms
+                        .reduce(
+                          (sum, room) =>
+                            sum + (room.price || 0) + (room.taxes || 0),
+                          0
+                        )
+                        .toLocaleString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleContinue}
+                    className="bg-[#FACC48] hover:bg-[#e6c042] text-[#061A6E] px-6 py-2 rounded font-medium transition-colors shadow-md"
+                  >
+                    Continue to Checkout
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// Main page component with Suspense boundary
 export default function HotelsDetailsPage() {
   return (
     <Suspense
       fallback={
         <div className="bg-[#EBF0F4] min-h-screen flex items-center justify-center">
-          <div className="text-xl">Loading hotel details...</div>
+          <Spin size="large" />
         </div>
-      }>
+      }
+    >
       <HotelsDetailsContent />
     </Suspense>
   );

@@ -8,30 +8,21 @@ const { Option } = Select;
 
 export default function ProfessionalHotelSearch() {
   const router = useRouter();
-  const [location, setLocation] = useState(null);
+  const [location] = useState("Cox's Bazar"); // Set default and make it constant
   const [checkInDate, setCheckInDate] = useState(null);
   const [checkOutDate, setCheckOutDate] = useState(null);
-  const [rooms, setRooms] = useState(1);
   const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
   const [loading, setLoading] = useState(false);
-
-  const locations = [
-    { name: "Dhaka", country: "" },
-    { name: "Cox's Bazar", country: "" },
-    { name: "Chittagong", country: "" },
-    { name: "Sylhet", country: "" },
-  ];
 
   const disabledDate = (current) => {
     return current && current < dayjs().startOf("day");
   };
 
   const fetchAvailableHotels = async () => {
-    if (!location || !checkInDate || !checkOutDate) {
+    if (!checkInDate || !checkOutDate) {
       notification.error({
         message: "Missing Fields",
-        description: "Please fill in all required fields before searching.",
+        description: "Please select check-in and check-out dates.",
         placement: "topRight",
       });
       return;
@@ -39,8 +30,7 @@ export default function ProfessionalHotelSearch() {
 
     setLoading(true);
     try {
-      // In a real app, you would make an actual API call here
-      // For demo purposes, we'll simulate a delay
+      // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Prepare search parameters for URL
@@ -48,9 +38,7 @@ export default function ProfessionalHotelSearch() {
         location,
         checkIn: checkInDate.format("YYYY-MM-DD"),
         checkOut: checkOutDate.format("YYYY-MM-DD"),
-        rooms: rooms.toString(),
         adults: adults.toString(),
-        children: children.toString(),
       });
 
       // Redirect to /hotels with search parameters
@@ -66,15 +54,6 @@ export default function ProfessionalHotelSearch() {
     }
   };
 
-  const getGuestText = () => {
-    let text = `${rooms} Room${rooms > 1 ? "s" : ""}`;
-    text += `, ${adults} Adult${adults > 1 ? "s" : ""}`;
-    if (children > 0) {
-      text += `, ${children} Child${children > 1 ? "ren" : ""}`;
-    }
-    return text;
-  };
-
   return (
     <ConfigProvider
       theme={{
@@ -88,33 +67,21 @@ export default function ProfessionalHotelSearch() {
         },
       }}>
       <div className="w-full max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white rounded-xl shadow-xl p-6 border border-gray-100">
+         
           <div className="flex flex-col lg:flex-row gap-4 items-end">
-            {/* Location Field */}
+            {/* Location Field - Disabled with Cox's Bazar */}
             <div className="flex-1 w-full">
               <label className="block text-sm font-medium text-[#061A6E] mb-1">
-                CITY/HOTEL/RESORT/AREA
+                DESTINATION
               </label>
               <Select
                 className="w-full h-14 text-base"
-                placeholder="Select city or hotel"
                 value={location}
-                onChange={setLocation}
-                showSearch
-                optionFilterProp="children"
                 size="large"
-                dropdownStyle={{ padding: "8px", borderRadius: "8px" }}
-                notFoundContent="No locations found">
-                {locations.map((loc) => (
-                  <Option key={loc.name} value={loc.name}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{loc.name}</span>
-                      <span className="text-xs text-gray-500">
-                        {loc.country}
-                      </span>
-                    </div>
-                  </Option>
-                ))}
+                disabled
+                style={{ background: "#f8fafc" }}>
+                <Option value="Cox's Bazar">Cox's Bazar</Option>
               </Select>
             </div>
 
@@ -129,8 +96,9 @@ export default function ProfessionalHotelSearch() {
                 size="large"
                 value={checkInDate}
                 onChange={setCheckInDate}
-                format="DD MMM YY"
+                format="DD MMM YYYY"
                 disabledDate={disabledDate}
+                style={{ background: checkInDate ? "#f8fafc" : "#fff" }}
               />
             </div>
 
@@ -145,74 +113,29 @@ export default function ProfessionalHotelSearch() {
                 size="large"
                 value={checkOutDate}
                 onChange={setCheckOutDate}
-                format="DD MMM YY"
+                format="DD MMM YYYY"
                 disabledDate={disabledDate}
+                style={{ background: checkOutDate ? "#f8fafc" : "#fff" }}
               />
             </div>
 
-            {/* Rooms & Guests */}
+            {/* Guests (Adults only) */}
             <div className="flex-1 w-full">
               <label className="block text-sm font-medium text-[#061A6E] mb-1">
-                ROOMS & GUESTS
+                GUESTS
               </label>
               <Select
                 className="w-full h-14 text-base"
-                placeholder="Select rooms & guests"
+                placeholder="Select guests"
                 size="large"
-                value={getGuestText()}
-                dropdownRender={() => (
-                  <div className="p-2 space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-[#061A6E] mb-1">
-                        Rooms
-                      </label>
-                      <Select
-                        className="w-full"
-                        value={rooms}
-                        onChange={setRooms}
-                        size="middle">
-                        {[1, 2, 3, 4, 5].map((num) => (
-                          <Option key={num} value={num}>
-                            {num} Room{num > 1 ? "s" : ""}
-                          </Option>
-                        ))}
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#061A6E] mb-1">
-                        Adults
-                      </label>
-                      <Select
-                        className="w-full"
-                        value={adults}
-                        onChange={setAdults}
-                        size="middle">
-                        {[1, 2, 3, 4, 5, 6].map((num) => (
-                          <Option key={num} value={num}>
-                            {num} Adult{num > 1 ? "s" : ""}
-                          </Option>
-                        ))}
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#061A6E] mb-1">
-                        Children
-                      </label>
-                      <Select
-                        className="w-full"
-                        value={children}
-                        onChange={setChildren}
-                        size="middle">
-                        {[0, 1, 2, 3, 4].map((num) => (
-                          <Option key={num} value={num}>
-                            {num} Child{num !== 1 ? "ren" : ""}
-                          </Option>
-                        ))}
-                      </Select>
-                    </div>
-                  </div>
-                )}
-              />
+                value={`${adults} Adult${adults > 1 ? "s" : ""}`}
+                onChange={setAdults}>
+                {[1, 2, 3, 4, 5, 6].map((num) => (
+                  <Option key={num} value={num}>
+                    {num} Adult{num > 1 ? "s" : ""}
+                  </Option>
+                ))}
+              </Select>
             </div>
 
             {/* Search Button */}
@@ -221,9 +144,9 @@ export default function ProfessionalHotelSearch() {
                 type="primary"
                 size="large"
                 onClick={fetchAvailableHotels}
-                className="w-full h-14 text-base bg-[#FACC48] hover:bg-[#f8d974] text-[#061A6E] font-medium border-none shadow-md hover:shadow-lg transition-all duration-300"
+                className="w-full h-14 text-base bg-[#FACC48] hover:bg-[#f8d974] text-[#061A6E] font-bold border-none shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
                 loading={loading}>
-                <span className="text-[15px] font-semibold">SEARCH HOTELS</span>
+                <span className="text-[16px]">SEARCH HOTELS</span>
               </Button>
             </div>
           </div>

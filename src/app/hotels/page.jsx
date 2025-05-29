@@ -28,99 +28,30 @@ const HotelListingContent = () => {
   const searchHotels = async (criteria) => {
     try {
       setLoading(true);
-
-      const response = await coreAxios.post("/hotel/search", {
-        location: criteria.location,
-        checkInDate: criteria.checkIn.format("YYYY-MM-DD"),
-        checkOutDate: criteria.checkOut.format("YYYY-MM-DD"),
-        rooms: criteria.rooms,
-        adults: criteria.adults,
-        children: criteria.children,
-        minPrice: priceRange[0],
-        maxPrice: priceRange[1],
-        stars: selectedStars,
+  
+      const params = new URLSearchParams({
+        location: criteria.location || "",
+        checkInDate: criteria.checkIn?.format("YYYY-MM-DD") || "",
+        checkOutDate: criteria.checkOut?.format("YYYY-MM-DD") || "",
+        rooms: criteria.rooms?.toString() || "",
+        adults: criteria.adults?.toString() || "",
+        children: criteria.children?.toString() || "",
+        minPrice: priceRange[0]?.toString() || "",
+        maxPrice: priceRange[1]?.toString() || "",
+        stars: selectedStars?.toString() || "",
       });
-
+  
+      const response = await coreAxios.get(`/web-hotels/search?${params.toString()}`);
+  
       setHotels(response.data);
     } catch (error) {
       notification.error({
         message: "Error",
         description: error.response?.data?.message || "Failed to load hotels",
       });
-      // Fallback to mock data if API fails
-      setHotels(getMockHotels(criteria.location));
     } finally {
       setLoading(false);
     }
-  };
-
-  // Mock data fallback function
-  const getMockHotels = (location) => {
-    const mockHotels = [
-      {
-        id: 1,
-        name: "Samudra Bari",
-        location: "Cox's Bazar",
-        amenities: [
-          "Couple Friendly",
-          "Accessible Bathroom",
-          "Air Conditioning",
-          "Beach View",
-        ],
-        price: 5138,
-        discount: "Extra 5% discount for bKash payment.",
-        rating: 4.2,
-        image:
-          "https://i.ibb.co.com/rKFwNNhQ/SB-Front-side.jpg",
-        topSelling: true,
-      },
-      {
-        id: 2,
-        name: "Shopno Bilash Holiday Suites",
-        location: "Kolatoli, Cox's Bazar",
-        amenities: [
-          "Garden",
-          "In-room Accessibility",
-          "Air Conditioning",
-          "Pool",
-        ],
-        price: 5408,
-        discount: "Extra 5% discount for bKash payment.",
-        rating: 4.0,
-        image:
-          "https://i.ibb.co.com/ds58jv8S/Shopno-Bilash-Front-Desk.jpg",
-        topSelling: false,
-      },
-      {
-        id: 3,
-        name: "Sea Paradise",
-        location: "Marine Drive, Cox's Bazar",
-        amenities: ["Free WiFi", "Restaurant", "Sea View", "24/7 Front Desk"],
-        price: 4200,
-        discount: "Book 2 nights get 1 night free",
-        rating: 4.5,
-        image:
-          "https://i.ibb.co.com/8DrSSwKB/Sea-paradise-1.jpg",
-        topSelling: true,
-      },
-      {
-        id: 4,
-        name: "Mermaid Bay Watch Resort",
-        location: "Kolatali Point, Cox's Bazar",
-        amenities: ["Private Beach", "Spa", "Bar", "Fitness Center"],
-        price: 7200,
-        discount: "Honeymoon package available",
-        rating: 4.7,
-        image:
-          "https://i.ibb.co.com/Rk2GQDqv/Mermaid-sea-view.jpg",
-        topSelling: true,
-      },
-      
-    ];
-
-    return mockHotels.filter((hotel) =>
-      hotel.location.includes(location.split("'")[0])
-    );
   };
 
   React.useEffect(() => {
@@ -148,7 +79,20 @@ const HotelListingContent = () => {
     if (searchCriteria.location) {
       searchHotels(searchCriteria);
     }
-  }, [priceRange, selectedStars]);
+  }, [priceRange, selectedStars, searchCriteria]);
+
+  const handleHotelSelect = (hotelId) => {
+    const queryParams = new URLSearchParams();
+    queryParams.set("id", hotelId);
+    queryParams.set("location", searchCriteria.location);
+    queryParams.set("checkIn", searchCriteria.checkIn.format("YYYY-MM-DD"));
+    queryParams.set("checkOut", searchCriteria.checkOut.format("YYYY-MM-DD"));
+    queryParams.set("rooms", searchCriteria.rooms);
+    queryParams.set("adults", searchCriteria.adults);
+    queryParams.set("children", searchCriteria.children);
+    
+    router.push(`/hotelsDetails?${queryParams.toString()}`);
+  };
 
   const starOptions = [
     { label: "5 Star", value: 5 },
@@ -390,7 +334,7 @@ const HotelListingContent = () => {
                 {hotels.length > 0 ? (
                   hotels.map((hotel) => (
                     <div
-                      key={hotel.id}
+                      key={hotel._id || hotel.id}
                       className="border border-gray-200 rounded-lg p-4 mb-6 hover:shadow-md transition-shadow bg-white relative">
                       {hotel.topSelling && (
                         <div className="absolute top-4 left-4 bg-[#FACC48] text-[#061A6E] px-3 py-1 rounded-full flex items-center gap-1 text-xs font-bold z-10">
@@ -423,7 +367,7 @@ const HotelListingContent = () => {
                           </p>
 
                           <div className="flex flex-wrap gap-2 mb-3">
-                            {hotel.amenities.map((amenity, index) => (
+                            {hotel.amenities?.map((amenity, index) => (
                               <span
                                 key={index}
                                 className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
@@ -442,7 +386,7 @@ const HotelListingContent = () => {
                                 Starts from BDT+47.30
                               </p>
                               <p className="text-2xl font-bold">
-                                BDT {hotel.price.toLocaleString()}
+                                BDT {hotel.price?.toLocaleString()}
                               </p>
                               <p className="text-gray-500 text-sm">
                                 for {nights} {nights > 1 ? "nights" : "night"},
@@ -450,19 +394,7 @@ const HotelListingContent = () => {
                               </p>
                             </div>
                             <button
-                              onClick={() =>
-                                router.push(
-                                  `/hotelsDetails?id=${hotel.id}&location=${
-                                    searchCriteria.location
-                                  }&checkIn=${searchCriteria.checkIn.format(
-                                    "YYYY-MM-DD"
-                                  )}&checkOut=${searchCriteria.checkOut.format(
-                                    "YYYY-MM-DD"
-                                  )}&rooms=${searchCriteria.rooms}&adults=${
-                                    searchCriteria.adults
-                                  }&children=${searchCriteria.children}`
-                                )
-                              }
+                              onClick={() => handleHotelSelect(hotel._id || hotel.id)}
                               className="bg-[#FACC48] text-[#061A6E] px-6 py-2 rounded hover:bg-[#e6c042] font-medium transition-colors">
                               Select
                             </button>

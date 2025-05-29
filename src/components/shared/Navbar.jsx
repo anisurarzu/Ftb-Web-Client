@@ -82,7 +82,7 @@ export default function Navbar() {
                   className="h-20 w-auto object-contain"
                 />
                 <span className="text-xl font-semibold text-[#061A6E] hidden md:block font-['Poppins'] uppercase">
-                  Fastrack Booking
+                  Fast Track Booking
                 </span>
               </div>
             </Link>
@@ -197,7 +197,7 @@ export default function Navbar() {
               className="h-8 w-auto mr-3"
             />
             <span className="text-lg font-semibold text-[#061A6E]">
-              Fastrack Booking
+              Fast Track Booking
             </span>
           </div>
         }
