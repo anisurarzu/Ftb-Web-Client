@@ -484,6 +484,7 @@ const Homepage = ({ hotels, hotelList }) => {
       </Modal>
 
       {/* Our Facilities Section */}
+      {/* Our Facilities Section */}
       <section className="py-20 bg-gradient-to-b from-white to-[#061A6E]/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -498,24 +499,36 @@ const Homepage = ({ hotels, hotelList }) => {
             <Divider className="w-32 mx-auto bg-[#061A6E] h-1" />
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mx-4 md:mx-12 lg:mx-24">
             {facilities.map((facility, index) => {
               const facilityIcons = [
-                <FaWater className="text-2xl text-[#061A6E]" />,
-                <FaMountain className="text-2xl text-[#061A6E]" />,
-                <FaCar className="text-2xl text-[#061A6E]" />,
-                <GiJeep className="text-2xl text-[#061A6E]" />,
-                <FaMapMarkerAlt className="text-2xl text-[#061A6E]" />,
-                <FaSwimmingPool className="text-2xl text-[#061A6E]" />,
-                <FaCoffee className="text-2xl text-[#061A6E]" />,
-                <FaStar className="text-2xl text-[#061A6E]" />,
-                <FaWallet className="text-2xl text-[#061A6E]" />,
-                <FaEllipsisH className="text-2xl text-[#061A6E]" />,
+                <FaWater key="water" className="text-2xl text-[#061A6E]" />,
+                <FaMountain
+                  key="mountain"
+                  className="text-2xl text-[#061A6E]"
+                />,
+                <FaCar key="car" className="text-2xl text-[#061A6E]" />,
+                <GiJeep key="jeep" className="text-2xl text-[#061A6E]" />,
+                <FaMapMarkerAlt
+                  key="marker"
+                  className="text-2xl text-[#061A6E]"
+                />,
+                <FaSwimmingPool
+                  key="pool"
+                  className="text-2xl text-[#061A6E]"
+                />,
+                <FaCoffee key="coffee" className="text-2xl text-[#061A6E]" />,
+                <FaStar key="star" className="text-2xl text-[#061A6E]" />,
+                <FaWallet key="wallet" className="text-2xl text-[#061A6E]" />,
+                <FaEllipsisH
+                  key="others"
+                  className="text-2xl text-[#061A6E]"
+                />,
               ];
 
               return (
                 <motion.div
-                  key={index}
+                  key={`facility-${index}`}
                   whileHover={{ scale: 1.05 }}
                   className="bg-white p-6 rounded-lg shadow-md border border-gray-100 text-center"
                 >
