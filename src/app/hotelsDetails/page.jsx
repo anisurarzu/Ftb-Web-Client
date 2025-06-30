@@ -102,72 +102,73 @@ const HotelsDetailsContent = () => {
   };
 
   const handleContinue = () => {
-    if (selectedRooms.length === 0) {
-      Modal.error({
-        title: "No Rooms Selected",
-        content: "Please select at least one room to continue",
-      });
-      return;
-    }
+  if (selectedRooms.length === 0) {
+    Modal.error({
+      title: "No Rooms Selected",
+      content: "Please select at least one room to continue",
+    });
+    return;
+  }
 
-    const bookingPayload = {
-      selectedRooms: selectedRooms.map((room) => ({
-        roomTypeId: room.roomTypeId,
-        roomType: room.roomType,
-        roomId: room.roomId,
-        roomNumber: room.roomNumber,
-        price: room.price,
-        description: room.description,
-        images: room.roomImages,
-        amenities: room.amenities,
-        optionType: room.type,
-        taxes: room.taxes,
-      })),
-      hotelName: hotel.name,
-      hotelId: hotel.id,
-      checkInDate: searchCriteria.checkIn.format("YYYY-MM-DD"),
-      checkOutDate: searchCriteria.checkOut.format("YYYY-MM-DD"),
-      nights: nights,
-      adults: searchCriteria.adults,
-      timestamp: new Date().toISOString(),
-    };
-
-    try {
-      sessionStorage.setItem("bookingData", JSON.stringify(bookingPayload));
-
-      if (!user) {
-        const modalInstance = Modal.confirm({
-          title: "Login Required",
-          content:
-            "You need to login to proceed with booking. Do you want to login now?",
-          okText: "Login",
-          cancelText: "Cancel",
-          onOk() {
-            modalInstance.destroy?.();
-            router.push(
-              `/login?redirect=${encodeURIComponent(
-                window.location.pathname + window.location.search
-              )}`
-            );
-          },
-          onCancel() {
-            modalInstance.destroy?.();
-            sessionStorage.removeItem("bookingData");
-          },
-        });
-      } else {
-        router.push("/checkout");
-      }
-    } catch (error) {
-      console.error("Error saving booking data:", error);
-      Modal.error({
-        title: "Booking Error",
-        content:
-          error.message ||
-          "Failed to save your booking details. Please try again.",
-      });
-    }
+  const bookingPayload = {
+    selectedRooms: selectedRooms.map((room) => ({
+      roomTypeId: room.roomTypeId,
+      roomType: room.roomType,
+      roomId: room.roomId,
+      roomNumber: room.roomNumber,
+      price: room.price,
+      description: room.description,
+      images: room.roomImages,
+      amenities: room.amenities,
+      optionType: room.type,
+      taxes: room.taxes,
+    })),
+    hotelName: hotel.name,
+    hotelId: hotel._id || hotel.hotelId, // Use either _id or hotelId
+    checkInDate: searchCriteria.checkIn.format("YYYY-MM-DD"),
+    checkOutDate: searchCriteria.checkOut.format("YYYY-MM-DD"),
+    nights: nights,
+    adults: searchCriteria.adults,
+    timestamp: new Date().toISOString(),
   };
+
+  // Rest of the function remains the same
+  try {
+    sessionStorage.setItem("bookingData", JSON.stringify(bookingPayload));
+
+    if (!user) {
+      const modalInstance = Modal.confirm({
+        title: "Login Required",
+        content:
+          "You need to login to proceed with booking. Do you want to login now?",
+        okText: "Login",
+        cancelText: "Cancel",
+        onOk() {
+          modalInstance.destroy?.();
+          router.push(
+            `/login?redirect=${encodeURIComponent(
+              window.location.pathname + window.location.search
+            )}`
+          );
+        },
+        onCancel() {
+          modalInstance.destroy?.();
+          sessionStorage.removeItem("bookingData");
+        },
+      });
+    } else {
+      router.push("/checkout");
+    }
+  } catch (error) {
+    console.error("Error saving booking data:", error);
+    Modal.error({
+      title: "Booking Error",
+      content:
+        error.message ||
+        "Failed to save your booking details. Please try again.",
+    });
+  }
+};
 
   // Skeleton Loading Component
   const SkeletonLoading = () => (

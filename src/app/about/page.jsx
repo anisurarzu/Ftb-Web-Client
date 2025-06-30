@@ -57,7 +57,8 @@ export default function AboutUs() {
 
   const SkeletonLoader = ({ className }) => (
     <div
-      className={`bg-gradient-to-r from-gray-100 to-gray-200 animate-pulse rounded-lg ${className}`}></div>
+      className={`bg-gradient-to-r from-gray-100 to-gray-200 animate-pulse rounded-lg ${className}`}
+    ></div>
   );
 
   return (
@@ -78,7 +79,8 @@ export default function AboutUs() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+        >
           {isLoading ? (
             <>
               <SkeletonLoader className="h-12 w-80 mx-auto mb-8 rounded-full" />
@@ -90,7 +92,8 @@ export default function AboutUs() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="text-4xl md:text-6xl font-bold mb-6 font-['Poppins']">
+                className="text-4xl md:text-6xl font-bold mb-6 font-['Poppins']"
+              >
                 Welcome to{" "}
                 <span className="text-cyan-300">Fast Track Booking</span>
               </motion.h1>
@@ -99,7 +102,8 @@ export default function AboutUs() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="inline-block mb-8">
+                className="inline-block mb-8"
+              >
                 <h2 className="text-2xl md:text-3xl font-semibold font-['Poppins']">
                   Book Easy! Stay Happy!
                 </h2>
@@ -109,7 +113,8 @@ export default function AboutUs() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="text-xl max-w-4xl mx-auto leading-relaxed font-['Inter']">
+                className="text-xl max-w-4xl mx-auto leading-relaxed font-['Inter']"
+              >
                 Your dream vacation starts here. Fast Track Booking is your
                 ultimate travel partner for seamless hotel reservations across
                 Bangladesh.
@@ -142,13 +147,14 @@ export default function AboutUs() {
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8 }}
                 viewport={{ once: true }}
-                className="relative h-96 rounded-2xl overflow-hidden shadow-xl">
-                <Image
-                  src={demoImages.about}
-                  alt="About Fast Track Booking"
-                  fill
-                  className="object-cover"
+                className="relative h-96 rounded-2xl overflow-hidden "
+              >
+                <img
+                  src="https://i.ibb.co.com/8QVXLJT/Whats-App-Image-2025-05-08-at-15-01-06-removebg-preview.png"
+                  alt="Brand Logo"
+                  className="h-96 w-auto object-contain"
                 />
+
                 <div className="absolute inset-0 bg-gradient-to-r from-[#061A6E] to-transparent opacity-30"></div>
               </motion.div>
 
@@ -156,7 +162,8 @@ export default function AboutUs() {
                 initial={{ opacity: 0, x: 60 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8 }}
-                viewport={{ once: true }}>
+                viewport={{ once: true }}
+              >
                 <h3 className="text-3xl font-bold text-[#061A6E] mb-6 font-['Poppins']">
                   Our Story
                 </h3>
@@ -178,7 +185,8 @@ export default function AboutUs() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="mt-8 bg-[#061A6E] text-white px-8 py-3 rounded-full font-medium shadow-lg hover:shadow-xl transition-all">
+                  className="mt-8 bg-[#061A6E] text-white px-8 py-3 rounded-full font-medium shadow-lg hover:shadow-xl transition-all"
+                >
                   Learn More About Us
                 </motion.button>
               </motion.div>
@@ -192,24 +200,28 @@ export default function AboutUs() {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="bg-[#061A6E] text-white rounded-2xl p-12 shadow-xl mb-32">
+          className="bg-[#061A6E] text-white rounded-2xl p-12 shadow-xl mb-32"
+        >
           <div className="max-w-4xl mx-auto text-center">
             <motion.div
               initial={{ scale: 0.9 }}
               whileInView={{ scale: 1 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className="inline-block mb-8">
+              className="inline-block mb-8"
+            >
               <svg
                 className="w-16 h-16 text-cyan-300"
                 fill="none"
                 stroke="currentColor"
-                viewBox="0 0 24 24">
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                ></path>
               </svg>
             </motion.div>
             <h3 className="text-3xl md:text-4xl font-bold mb-6 font-['Poppins']">
@@ -230,7 +242,8 @@ export default function AboutUs() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-3xl font-bold text-center text-gray-900 mb-6 font-['Poppins']">
+            className="text-3xl font-bold text-center text-gray-900 mb-6 font-['Poppins']"
+          >
             Discover Our Hotels
           </motion.h3>
 
@@ -239,7 +252,8 @@ export default function AboutUs() {
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className="text-xl text-center text-gray-600 mb-16 max-w-3xl mx-auto font-['Inter']">
+            className="text-xl text-center text-gray-600 mb-16 max-w-3xl mx-auto font-['Inter']"
+          >
             Each property offers a unique blend of luxury, comfort, and
             unforgettable experiences.
           </motion.p>
@@ -255,7 +269,8 @@ export default function AboutUs() {
                       whileInView={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.1 }}
                       viewport={{ once: true }}
-                      className="space-y-4">
+                      className="space-y-4"
+                    >
                       <SkeletonLoader className="h-60 w-full rounded-2xl" />
                       <SkeletonLoader className="h-6 w-3/4 rounded-full" />
                       <SkeletonLoader className="h-4 w-full rounded-full" />
@@ -270,7 +285,8 @@ export default function AboutUs() {
                     transition={{ duration: 0.4, delay: index * 0.1 }}
                     viewport={{ once: true }}
                     className="group relative overflow-hidden rounded-2xl shadow-lg cursor-pointer"
-                    onClick={() => setActiveHotel(index)}>
+                    onClick={() => setActiveHotel(index)}
+                  >
                     <div className="relative h-60">
                       <Image
                         src={demoImages.hotels[index]}
@@ -304,7 +320,8 @@ export default function AboutUs() {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="text-center mb-20">
+          className="text-center mb-20"
+        >
           <div className="bg-[#061A6E] rounded-2xl p-12 shadow-2xl">
             <h3 className="text-3xl font-bold text-white mb-6 font-['Poppins']">
               Ready for Your Next Adventure?
@@ -316,7 +333,8 @@ export default function AboutUs() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white text-[#061A6E] px-10 py-4 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all">
+              className="bg-white text-[#061A6E] px-10 py-4 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+            >
               Book Your Stay Now
             </motion.button>
           </div>
@@ -334,13 +352,15 @@ export default function AboutUs() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4"
-            onClick={() => setActiveHotel(null)}>
+            onClick={() => setActiveHotel(null)}
+          >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-2xl overflow-hidden max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}>
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="relative h-64 md:h-80">
                 <Image
                   src={demoImages.hotels[activeHotel]}
@@ -350,17 +370,20 @@ export default function AboutUs() {
                 />
                 <button
                   className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md"
-                  onClick={() => setActiveHotel(null)}>
+                  onClick={() => setActiveHotel(null)}
+                >
                   <svg
                     className="w-6 h-6 text-gray-800"
                     fill="none"
                     stroke="currentColor"
-                    viewBox="0 0 24 24">
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"></path>
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
                   </svg>
                 </button>
               </div>
@@ -380,12 +403,14 @@ export default function AboutUs() {
                       className="w-5 h-5 text-[#061A6E] mr-2"
                       fill="none"
                       stroke="currentColor"
-                      viewBox="0 0 24 24">
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
                     </svg>
                     <span className="text-gray-600 font-['Inter']">
                       Beachfront Location
@@ -396,12 +421,14 @@ export default function AboutUs() {
                       className="w-5 h-5 text-[#061A6E] mr-2"
                       fill="none"
                       stroke="currentColor"
-                      viewBox="0 0 24 24">
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                      ></path>
                     </svg>
                     <span className="text-gray-600 font-['Inter']">
                       Luxury Amenities
@@ -412,12 +439,14 @@ export default function AboutUs() {
                       className="w-5 h-5 text-[#061A6E] mr-2"
                       fill="none"
                       stroke="currentColor"
-                      viewBox="0 0 24 24">
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      ></path>
                     </svg>
                     <span className="text-gray-600 font-['Inter']">
                       24/7 Room Service
@@ -428,12 +457,14 @@ export default function AboutUs() {
                       className="w-5 h-5 text-[#061A6E] mr-2"
                       fill="none"
                       stroke="currentColor"
-                      viewBox="0 0 24 24">
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      ></path>
                     </svg>
                     <span className="text-gray-600 font-['Inter']">
                       Flexible Booking

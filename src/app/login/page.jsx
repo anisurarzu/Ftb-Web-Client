@@ -26,14 +26,17 @@ function LoginForm() {
 
       message.success("Login successful!");
       localStorage.setItem("token", data.token);
-      localStorage.setItem("userInfo", JSON.stringify({
-        _id: data._id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        username: data.username,
-        email: data.email,
-        loginHistory: data.loginHistory,
-      }));
+      localStorage.setItem(
+        "userInfo",
+        JSON.stringify({
+          _id: data._id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          username: data.username,
+          email: data.email,
+          loginHistory: data.loginHistory,
+        })
+      );
 
       login({ ...data });
       router.push(redirectTo);
@@ -51,11 +54,13 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <div className="text-center">
-          <img
-            src="/logo.png"
-            alt="Company Logo"
-            className="h-16 mx-auto mb-4"
-          />
+          <div className="flex justify-center ">
+            <img
+              src="https://i.ibb.co.com/8QVXLJT/Whats-App-Image-2025-05-08-at-15-01-06-removebg-preview.png"
+              alt="Brand Logo"
+              className="h-20 w-auto object-contain"
+            />
+          </div>
           <h2 className="text-2xl font-bold text-[#061A6E]">Welcome Back</h2>
           <p className="text-gray-600 mt-2">Please login to your account</p>
         </div>
@@ -72,7 +77,11 @@ function LoginForm() {
             name="username"
             rules={[{ required: true, message: "Please input your username!" }]}
           >
-            <Input placeholder="Enter your username" size="large" className="py-2" />
+            <Input
+              placeholder="Enter your username"
+              size="large"
+              className="py-2"
+            />
           </Form.Item>
 
           <Form.Item
@@ -80,7 +89,11 @@ function LoginForm() {
             name="password"
             rules={[{ required: true, message: "Please input your password!" }]}
           >
-            <Input.Password placeholder="Enter your password" size="large" className="py-2" />
+            <Input.Password
+              placeholder="Enter your password"
+              size="large"
+              className="py-2"
+            />
           </Form.Item>
 
           <Form.Item className="mt-8">
@@ -98,7 +111,10 @@ function LoginForm() {
           <div className="text-center mt-4">
             <p className="text-gray-600">
               {"Don't have an account?"}{" "}
-              <a href="/register" className="text-[#061A6E] hover:underline font-medium">
+              <a
+                href="/registration"
+                className="text-[#061A6E] hover:underline font-medium"
+              >
                 Register now
               </a>
             </p>

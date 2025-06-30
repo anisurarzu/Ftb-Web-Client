@@ -5,12 +5,10 @@ import { motion } from "framer-motion";
 
 const ImageGallery = () => {
   const galleryImages = [
-    "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=600",
-    "https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=600",
-    "https://images.pexels.com/photos/261395/pexels-photo-261395.jpeg?auto=compress&cs=tinysrgb&w=600",
-    "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=600",
-    "https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=600",
-    "https://images.pexels.com/photos/261395/pexels-photo-261395.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "https://i.ibb.co/jnb7M7d/SB-Living-Room-1.jpg",
+    "https://i.ibb.co/bMX3HyNC/SB-Bedroom-2.jpg",
+    "https://i.ibb.co/XftzmQtf/Sea-paradise-1.jpg",
+    "https://i.ibb.co/bMX3HyNC/SB-Bedroom-2.jpg",
   ];
 
   return (
@@ -21,7 +19,8 @@ const ImageGallery = () => {
           className="max-w-6xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}>
+          transition={{ duration: 1 }}
+        >
           <Carousel
             autoplay
             autoplaySpeed={3000}
@@ -46,12 +45,14 @@ const ImageGallery = () => {
                   slidesToShow: 1,
                 },
               },
-            ]}>
+            ]}
+          >
             {galleryImages.map((image, index) => (
               <div key={index} className="px-2">
                 <motion.div
                   className="overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
-                  whileHover={{ scale: 1.05 }}>
+                  whileHover={{ scale: 1.05 }}
+                >
                   <Image
                     src={image}
                     alt={`Gallery Image ${index + 1}`}

@@ -8,7 +8,7 @@ const { Option } = Select;
 
 export default function ProfessionalHotelSearch() {
   const router = useRouter();
-  const [location] = useState("Cox&apos;s Bazar"); // Fixed: Escaped apostrophe
+  const [location] = useState("Coxs Bazar"); // Fixed: Escaped apostrophe
   const [checkInDate, setCheckInDate] = useState(null);
   const [checkOutDate, setCheckOutDate] = useState(null);
   const [adults, setAdults] = useState(2);
@@ -65,10 +65,10 @@ export default function ProfessionalHotelSearch() {
           controlHeight: 48,
           colorText: "#061A6E",
         },
-      }}>
+      }}
+    >
       <div className="w-full max-w-6xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-xl p-6 border border-gray-100">
-         
           <div className="flex flex-col lg:flex-row gap-4 items-end">
             {/* Location Field - Disabled with Cox's Bazar */}
             <div className="flex-1 w-full">
@@ -80,8 +80,10 @@ export default function ProfessionalHotelSearch() {
                 value={location}
                 size="large"
                 disabled
-                style={{ background: "#f8fafc" }}>
-                <Option value="Cox&apos;s Bazar">Cox&apos;s Bazar</Option> {/* Fixed */}
+                style={{ background: "#f8fafc" }}
+              >
+                <Option value="Cox's Bazar">Cox&apos;s Bazar</Option>{" "}
+                {/* Fixed */}
               </Select>
             </div>
 
@@ -129,7 +131,8 @@ export default function ProfessionalHotelSearch() {
                 placeholder="Select guests"
                 size="large"
                 value={`${adults} Adult${adults > 1 ? "s" : ""}`}
-                onChange={setAdults}>
+                onChange={setAdults}
+              >
                 {[1, 2, 3, 4, 5, 6].map((num) => (
                   <Option key={num} value={num}>
                     {num} Adult{num > 1 ? "s" : ""}
@@ -145,7 +148,8 @@ export default function ProfessionalHotelSearch() {
                 size="large"
                 onClick={fetchAvailableHotels}
                 className="w-full h-14 text-base bg-[#FACC48] hover:bg-[#f8d974] text-[#061A6E] font-bold border-none shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
-                loading={loading}>
+                loading={loading}
+              >
                 <span className="text-[16px]">SEARCH HOTELS</span>
               </Button>
             </div>

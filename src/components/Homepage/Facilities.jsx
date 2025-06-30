@@ -70,7 +70,8 @@ export default function Facilities() {
   // Scroll left by one item
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
-      const itemWidth = scrollContainerRef.current.querySelector("button").offsetWidth; // Get width of one item
+      const itemWidth =
+        scrollContainerRef.current.querySelector("button").offsetWidth; // Get width of one item
       scrollContainerRef.current.scrollBy({
         left: -itemWidth, // Scroll left by one item width
         behavior: "smooth",
@@ -81,7 +82,8 @@ export default function Facilities() {
   // Scroll right by one item
   const scrollRight = () => {
     if (scrollContainerRef.current) {
-      const itemWidth = scrollContainerRef.current.querySelector("button").offsetWidth; // Get width of one item
+      const itemWidth =
+        scrollContainerRef.current.querySelector("button").offsetWidth; // Get width of one item
       scrollContainerRef.current.scrollBy({
         left: itemWidth, // Scroll right by one item width
         behavior: "smooth",

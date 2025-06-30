@@ -23,7 +23,6 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const paymentMethods = [
- 
   { value: "bKash", label: "bKash" },
   { value: "Nagad", label: "Nagad" },
   { value: "Bank", label: "Bank Transfer" },
@@ -65,10 +64,11 @@ export default function CheckoutPage() {
       try {
         const parsedData = JSON.parse(storedBookingData);
 
+        // Validate main booking data structure
         const requiredFields = {
           selectedRooms: "array",
           hotelName: "string",
-          hotelId: "number",
+          hotelId: "string",
           checkInDate: "string",
           checkOutDate: "string",
           nights: "number",
@@ -78,7 +78,7 @@ export default function CheckoutPage() {
         const invalidFields = [];
 
         Object.entries(requiredFields).forEach(([field, type]) => {
-          if (!parsedData[field]) {
+          if (!(field in parsedData)) {
             missingFields.push(field);
           } else if (type === "array" && !Array.isArray(parsedData[field])) {
             invalidFields.push(field);
@@ -109,6 +109,18 @@ export default function CheckoutPage() {
           throw new Error("No rooms selected");
         }
 
+        // Enhanced room data validation with defaults
+        parsedData.selectedRooms = parsedData.selectedRooms.map((room) => {
+          // Add default values for missing required fields
+          return {
+            roomTypeId:
+              room.roomTypeId ||
+              `temp-id-${Math.random().toString(36).substr(2, 9)}`,
+            price: room.price || 1000, // Default price if missing or 0
+            ...room,
+          };
+        });
+
         const room = parsedData.selectedRooms[0];
         const requiredRoomFields = {
           roomTypeId: "string",
@@ -125,25 +137,29 @@ export default function CheckoutPage() {
             missingRoomFields.push(field);
           } else if (type === "number" && isNaN(room[field])) {
             invalidRoomFields.push(field);
+          } else if (type === "number" && room[field] <= 0) {
+            invalidRoomFields.push(`${field} (must be greater than 0)`);
           }
         });
 
         if (missingRoomFields.length > 0 || invalidRoomFields.length > 0) {
-          let errorMessage = "Room data: ";
+          let errorMessage = "Room data issue: ";
           if (missingRoomFields.length > 0) {
             errorMessage += `Missing fields: ${missingRoomFields.join(", ")}. `;
           }
           if (invalidRoomFields.length > 0) {
-            errorMessage += `Invalid fields: ${invalidRoomFields.join(", ")}.`;
+            errorMessage += `Invalid values: ${invalidRoomFields.join(", ")}.`;
           }
           throw new Error(errorMessage);
         }
 
+        // Format dates
         parsedData.checkInDate = dayjs(parsedData.checkInDate).toISOString();
         parsedData.checkOutDate = dayjs(parsedData.checkOutDate).toISOString();
 
         setBookingData(parsedData);
 
+        // Set form values
         form.setFieldsValue({
           fullName: user?.name || "",
           phone: user?.phone || "",
@@ -307,7 +323,8 @@ export default function CheckoutPage() {
             type="primary"
             onClick={() => router.push("/hotels")}
             className="bg-blue-600"
-            size="large">
+            size="large"
+          >
             Back to Hotels
           </Button>
         </div>
@@ -321,7 +338,8 @@ export default function CheckoutPage() {
         <div className="mt-8 mb-10">
           <Title
             level={1}
-            className="text-4xl font-bold text-gray-800 mb-2 font-serif">
+            className="text-4xl font-bold text-gray-800 mb-2 font-serif"
+          >
             Complete Your Booking
           </Title>
           <Text className="text-lg text-gray-600">
@@ -344,7 +362,8 @@ export default function CheckoutPage() {
                 borderBottom: "1px solid #e5e7eb",
                 padding: "20px 24px",
               }}
-              bodyStyle={{ padding: "24px" }}>
+              bodyStyle={{ padding: "24px" }}
+            >
               <Form form={form} onFinish={handleSubmit} layout="vertical">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Form.Item
@@ -359,7 +378,8 @@ export default function CheckoutPage() {
                         required: true,
                         message: "Please enter your full name",
                       },
-                    ]}>
+                    ]}
+                  >
                     <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
                   <Form.Item
@@ -374,14 +394,16 @@ export default function CheckoutPage() {
                         required: true,
                         message: "Please enter your phone number",
                       },
-                    ]}>
+                    ]}
+                  >
                     <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
                   <Form.Item
                     name="email"
                     label={
                       <Text className="font-medium text-gray-700">Email</Text>
-                    }>
+                    }
+                  >
                     <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
                   <Form.Item
@@ -390,7 +412,8 @@ export default function CheckoutPage() {
                       <Text className="font-medium text-gray-700">
                         NID/Passport
                       </Text>
-                    }>
+                    }
+                  >
                     <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
                   <Form.Item
@@ -398,7 +421,8 @@ export default function CheckoutPage() {
                     label={
                       <Text className="font-medium text-gray-700">Address</Text>
                     }
-                    className="md:col-span-2">
+                    className="md:col-span-2"
+                  >
                     <Input.TextArea rows={3} className="rounded-lg" />
                   </Form.Item>
                 </div>
@@ -417,14 +441,16 @@ export default function CheckoutPage() {
                 borderBottom: "1px solid #e5e7eb",
                 padding: "20px 24px",
               }}
-              bodyStyle={{ padding: "24px" }}>
+              bodyStyle={{ padding: "24px" }}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Form.Item
                   name="adults"
                   label={
                     <Text className="font-medium text-gray-700">Adults</Text>
                   }
-                  initialValue={1}>
+                  initialValue={1}
+                >
                   <InputNumber
                     min={1}
                     max={10}
@@ -437,7 +463,8 @@ export default function CheckoutPage() {
                   label={
                     <Text className="font-medium text-gray-700">Children</Text>
                   }
-                  initialValue={0}>
+                  initialValue={0}
+                >
                   <InputNumber
                     min={0}
                     max={10}
@@ -470,7 +497,8 @@ export default function CheckoutPage() {
                       Special Requests
                     </Text>
                   }
-                  className="md:col-span-2">
+                  className="md:col-span-2"
+                >
                   <Input.TextArea rows={3} className="rounded-lg" />
                 </Form.Item>
               </div>
@@ -488,7 +516,8 @@ export default function CheckoutPage() {
                 borderBottom: "1px solid #e5e7eb",
                 padding: "20px 24px",
               }}
-              bodyStyle={{ padding: "24px" }}>
+              bodyStyle={{ padding: "24px" }}
+            >
               <Form.Item
                 name="paymentMethod"
                 label={
@@ -499,11 +528,13 @@ export default function CheckoutPage() {
                 initialValue="later"
                 rules={[
                   { required: true, message: "Please select payment method" },
-                ]}>
+                ]}
+              >
                 <Select
                   size="large"
                   className="w-full rounded-lg h-12"
-                  onChange={(value) => setPaymentMethod(value)}>
+                  onChange={(value) => setPaymentMethod(value)}
+                >
                   {paymentMethods.map((method) => (
                     <Option key={method.value} value={method.value}>
                       {method.label}
@@ -548,7 +579,8 @@ export default function CheckoutPage() {
                             },
                           ]
                         : []
-                    }>
+                    }
+                  >
                     <Input size="large" className="rounded-lg h-12" />
                   </Form.Item>
                 </div>
@@ -569,7 +601,8 @@ export default function CheckoutPage() {
                 borderBottom: "1px solid #e5e7eb",
                 padding: "20px 24px",
               }}
-              bodyStyle={{ padding: "24px" }}>
+              bodyStyle={{ padding: "24px" }}
+            >
               <div className="space-y-5">
                 <div>
                   <Text className="text-gray-500 text-sm font-medium">
@@ -664,7 +697,8 @@ export default function CheckoutPage() {
                   loading={submitting}
                   onClick={() => form.submit()}
                   className="w-full bg-blue-600 hover:bg-blue-700 h-14 rounded-lg mt-6 text-lg font-semibold"
-                  size="large">
+                  size="large"
+                >
                   {submitting ? "Processing..." : "Confirm Booking"}
                 </Button>
               </div>
