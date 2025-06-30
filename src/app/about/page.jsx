@@ -3,57 +3,70 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
+
+import { message } from "antd";
+import coreAxios from "@/components/coreAxios/Axios";
 
 export default function AboutUs() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeHotel, setActiveHotel] = useState(null);
+  const [hotels, setHotels] = useState([]);
+  const [hotelDetails, setHotelDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1200);
-    return () => clearTimeout(timer);
+    const fetchHotels = async () => {
+      try {
+        const response = await coreAxios.get("/web-hotels");
+        const hotelData = response.data || [];
+        const formattedHotels = hotelData?.map((hotel, index) => ({
+          id: hotel.id || index,
+          _id: hotel._id || index,
+          name: hotel.name,
+          location: hotel.location,
+          rating: hotel.rating || 4,
+          price: `৳${hotel.price}/night`,
+          image: hotel.image,
+          amenities: hotel.amenities || [],
+          gradient:
+            index % 4 === 0
+              ? "from-blue-500 to-blue-700"
+              : index % 4 === 1
+              ? "from-green-500 to-green-700"
+              : index % 4 === 2
+              ? "from-purple-500 to-purple-700"
+              : "from-amber-500 to-amber-700",
+        }));
+
+        setHotels(formattedHotels);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching hotels:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchHotels();
   }, []);
 
-  // Demo images
-  const demoImages = {
-    hero: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-    about:
-      "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-    hotels: [
-      "https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.0.3&auto=format&fit=crop&w=1932&q=80",
-      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1582719471380-cd82d1776fd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1568084680786-a84f91d1153c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80",
-    ],
+  const fetchHotelDetails = async (hotelId) => {
+    setDetailsLoading(true);
+    try {
+      const response = await coreAxios.get(`/web-hotel-details/${hotelId}`);
+      setHotelDetails(response.data);
+    } catch (error) {
+      console.error("Error fetching hotel details:", error);
+      message.error("Failed to load hotel details");
+    } finally {
+      setDetailsLoading(false);
+    }
   };
 
-  const hotels = [
-    {
-      name: "Mermaid",
-      description:
-        "A serene beachfront retreat with stunning ocean views and world-class amenities.",
-      tagline: "Where the sea meets luxury",
-    },
-    {
-      name: "Sea Paradise",
-      description:
-        "Nestled in nature, this hotel offers tranquility and luxury for a perfect escape.",
-      tagline: "Your private slice of heaven",
-    },
-    {
-      name: "Shopno Bilash",
-      description:
-        "A family-friendly destination with spacious rooms and fun activities for all ages.",
-      tagline: "Making family memories",
-    },
-    {
-      name: "Somudra Bari",
-      description:
-        "Experience coastal charm with modern comforts and exceptional hospitality.",
-      tagline: "The ocean welcomes you home",
-    },
-  ];
+  const handleHotelClick = (hotelId) => {
+    setActiveHotel(hotelId);
+    fetchHotelDetails(hotelId);
+  };
 
   const SkeletonLoader = ({ className }) => (
     <div
@@ -64,15 +77,18 @@ export default function AboutUs() {
   return (
     <div className="min-h-screen bg-white overflow-hidden">
       {/* Hero Section */}
-      <div className="relative bg-[#061A6E] text-white pb-20 pt-32">
+      {/* Hero Section */}
+      <div className="relative bg-gray-900 text-white pb-20 pt-32">
         <div className="absolute inset-0 overflow-hidden">
           <Image
-            src={demoImages.hero}
+            src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
             alt="Background"
             fill
-            className="object-cover opacity-20"
+            className="object-cover opacity-70"
+            style={{ filter: "grayscale(50%) brightness(0.7) contrast(1.2)" }}
             priority
           />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30"></div>
         </div>
 
         <motion.div
@@ -95,7 +111,7 @@ export default function AboutUs() {
                 className="text-4xl md:text-6xl font-bold mb-6 font-['Poppins']"
               >
                 Welcome to{" "}
-                <span className="text-cyan-300">Fast Track Booking</span>
+                <span className="text-amber-400">Fast Track Booking</span>
               </motion.h1>
 
               <motion.div
@@ -104,7 +120,7 @@ export default function AboutUs() {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="inline-block mb-8"
               >
-                <h2 className="text-2xl md:text-3xl font-semibold font-['Poppins']">
+                <h2 className="text-2xl md:text-3xl font-semibold font-['Poppins'] text-amber-100">
                   Book Easy! Stay Happy!
                 </h2>
               </motion.div>
@@ -113,7 +129,7 @@ export default function AboutUs() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="text-xl max-w-4xl mx-auto leading-relaxed font-['Inter']"
+                className="text-xl max-w-4xl mx-auto leading-relaxed font-['Inter'] text-gray-200"
               >
                 Your dream vacation starts here. Fast Track Booking is your
                 ultimate travel partner for seamless hotel reservations across
@@ -147,14 +163,13 @@ export default function AboutUs() {
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8 }}
                 viewport={{ once: true }}
-                className="relative h-96 rounded-2xl overflow-hidden "
+                className="relative h-96 rounded-2xl overflow-hidden"
               >
                 <img
                   src="https://i.ibb.co.com/8QVXLJT/Whats-App-Image-2025-05-08-at-15-01-06-removebg-preview.png"
                   alt="Brand Logo"
                   className="h-96 w-auto object-contain"
                 />
-
                 <div className="absolute inset-0 bg-gradient-to-r from-[#061A6E] to-transparent opacity-30"></div>
               </motion.div>
 
@@ -182,13 +197,15 @@ export default function AboutUs() {
                     reviews so you can book with confidence.
                   </p>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="mt-8 bg-[#061A6E] text-white px-8 py-3 rounded-full font-medium shadow-lg hover:shadow-xl transition-all"
-                >
-                  Learn More About Us
-                </motion.button>
+                <Link href="/contact">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="mt-8 bg-[#061A6E] text-white px-8 py-3 rounded-full font-medium shadow-lg hover:shadow-xl transition-all"
+                  >
+                    Learn More About Us
+                  </motion.button>
+                </Link>
               </motion.div>
             </>
           )}
@@ -276,32 +293,34 @@ export default function AboutUs() {
                       <SkeletonLoader className="h-4 w-full rounded-full" />
                     </motion.div>
                   ))
-              : hotels.map((hotel, index) => (
+              : hotels.map((hotel) => (
                   <motion.div
-                    key={hotel.name}
+                    key={hotel._id}
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     whileHover={{ y: -10 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    transition={{ duration: 0.4 }}
                     viewport={{ once: true }}
                     className="group relative overflow-hidden rounded-2xl shadow-lg cursor-pointer"
-                    onClick={() => setActiveHotel(index)}
+                    onClick={() => handleHotelClick(hotel._id)}
                   >
                     <div className="relative h-60">
                       <Image
-                        src={demoImages.hotels[index]}
+                        src={hotel.image}
                         alt={hotel.name}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-t ${hotel.gradient} to-transparent opacity-30`}
+                      ></div>
                     </div>
                     <div className="absolute bottom-0 left-0 p-6 text-white">
                       <h4 className="text-2xl font-bold mb-1 font-['Poppins']">
                         {hotel.name}
                       </h4>
                       <p className="text-sm opacity-90 font-['Inter']">
-                        {hotel.tagline}
+                        {hotel.location}
                       </p>
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-40">
@@ -346,7 +365,7 @@ export default function AboutUs() {
 
       {/* Hotel Detail Modal */}
       <AnimatePresence>
-        {activeHotel !== null && (
+        {activeHotel !== null && hotelDetails && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -362,12 +381,14 @@ export default function AboutUs() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative h-64 md:h-80">
-                <Image
-                  src={demoImages.hotels[activeHotel]}
-                  alt={hotels[activeHotel].name}
-                  fill
-                  className="object-cover"
-                />
+                {hotelDetails.images?.[0] && (
+                  <Image
+                    src={hotelDetails.images[0]}
+                    alt={hotelDetails.name}
+                    fill
+                    className="object-cover"
+                  />
+                )}
                 <button
                   className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md"
                   onClick={() => setActiveHotel(null)}
@@ -389,88 +410,69 @@ export default function AboutUs() {
               </div>
               <div className="p-8">
                 <h3 className="text-3xl font-bold text-[#061A6E] mb-2 font-['Poppins']">
-                  {hotels[activeHotel].name}
+                  {hotelDetails.name}
                 </h3>
                 <p className="text-lg text-cyan-600 mb-6 font-['Inter']">
-                  {hotels[activeHotel].tagline}
+                  {hotelDetails.location}
                 </p>
-                <p className="text-gray-700 mb-6 font-['Inter']">
-                  {hotels[activeHotel].description}
-                </p>
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="flex items-center">
-                    <svg
-                      className="w-5 h-5 text-[#061A6E] mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
-                    </svg>
-                    <span className="text-gray-600 font-['Inter']">
-                      Beachfront Location
-                    </span>
+                <div className="flex items-center mb-6">
+                  <div className="flex items-center bg-[#061A6E] text-white px-2 py-1 rounded mr-4">
+                    <span className="text-yellow-300 mr-1">★</span>
+                    <span>{hotelDetails.rating || 4}</span>
                   </div>
-                  <div className="flex items-center">
-                    <svg
-                      className="w-5 h-5 text-[#061A6E] mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                      ></path>
-                    </svg>
-                    <span className="text-gray-600 font-['Inter']">
-                      Luxury Amenities
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <svg
-                      className="w-5 h-5 text-[#061A6E] mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      ></path>
-                    </svg>
-                    <span className="text-gray-600 font-['Inter']">
-                      24/7 Room Service
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <svg
-                      className="w-5 h-5 text-[#061A6E] mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      ></path>
-                    </svg>
-                    <span className="text-gray-600 font-['Inter']">
-                      Flexible Booking
-                    </span>
-                  </div>
+                  <span className="text-gray-700 font-medium">
+                    {hotelDetails.price || "৳0/night"}
+                  </span>
                 </div>
+
+                {hotelDetails.roomTypes?.length > 0 && (
+                  <div className="mb-8">
+                    <h4 className="text-xl font-semibold mb-4">Room Types</h4>
+                    <div className="space-y-4">
+                      {hotelDetails.roomTypes.map((room, index) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <h5 className="font-medium text-lg">{room.name}</h5>
+                          <p className="text-gray-600 mb-2">
+                            {room.description}
+                          </p>
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {room.amenities?.map((amenity, i) => (
+                              <span
+                                key={i}
+                                className="bg-gray-100 px-2 py-1 rounded text-sm"
+                              >
+                                {amenity}
+                              </span>
+                            ))}
+                          </div>
+                          {room.options?.length > 0 && (
+                            <div className="space-y-3">
+                              {room.options.map((option, optIndex) => (
+                                <div
+                                  key={optIndex}
+                                  className="flex justify-between items-center"
+                                >
+                                  <div>
+                                    <span className="font-medium">
+                                      {option.type}
+                                    </span>
+                                    <span className="text-sm text-gray-500 ml-2">
+                                      (Max {option.adults} adults)
+                                    </span>
+                                  </div>
+                                  <span className="font-bold">
+                                    ৳{option.price}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <button className="w-full bg-[#061A6E] text-white py-3 rounded-lg font-semibold hover:bg-[#0d2b9e] transition-colors font-['Inter']">
                   Book Now
                 </button>
