@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Spin,
@@ -10,6 +10,12 @@ import {
   Avatar,
   Divider,
   Skeleton,
+  Tabs,
+  Tag,
+  Modal,
+  QRCode,
+  Descriptions,
+  List,
 } from "antd";
 import {
   FaClipboardList,
@@ -32,9 +38,18 @@ import {
   FaUsersCog,
   FaCog,
   FaMailBulk,
+  FaPrint,
+  FaDownload,
+  FaShareAlt,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { toPng } from "html-to-image";
 import coreAxios from "@/components/coreAxios/Axios";
+import Image from "next/image";
+import { message } from "antd";
+
+const { Step } = Steps;
+const { TabPane } = Tabs;
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -44,7 +59,9 @@ export default function ProfilePage() {
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
   const router = useRouter();
+  const invoiceRef = useRef();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -79,11 +96,11 @@ export default function ProfilePage() {
     fetchUserData();
   }, [router]);
 
-  const tabs = [
-    { id: "bookings", name: "Bookings", icon: <FaClipboardList /> },
-    { id: "account", name: "Account", icon: <FaUser /> },
-    { id: "wishlist", name: "Wish List", icon: <FaHeart /> },
-    { id: "reviews", name: "Reviews", icon: <FaStar /> },
+  const navItems = [
+    { key: "bookings", label: "Bookings", icon: <FaClipboardList /> },
+    { key: "account", label: "Account", icon: <FaUser /> },
+    { key: "wishlist", label: "Wish List", icon: <FaHeart /> },
+    { key: "reviews", label: "Reviews", icon: <FaStar /> },
   ];
 
   const accountSections = [
@@ -93,10 +110,12 @@ export default function ProfilePage() {
         {
           icon: <FaUser className="text-[#061A6E]" />,
           title: "Profile Details",
+          description: "View and update your personal information",
         },
         {
           icon: <FaLock className="text-[#061A6E]" />,
           title: "Security Settings",
+          description: "Change password and security options",
         },
       ],
     },
@@ -106,10 +125,12 @@ export default function ProfilePage() {
         {
           icon: <FaWallet className="text-[#061A6E]" />,
           title: "Payment Options",
+          description: "Manage your saved payment methods",
         },
         {
           icon: <FaMoneyBillWave className="text-[#061A6E]" />,
           title: "Billing History",
+          description: "View your transaction history",
         },
       ],
     },
@@ -119,20 +140,209 @@ export default function ProfilePage() {
         {
           icon: <FaMailBulk className="text-[#061A6E]" />,
           title: "Email Preferences",
+          description: "Manage your notification settings",
         },
         {
           icon: <FaCog className="text-[#061A6E]" />,
           title: "Account Settings",
+          description: "Customize your account experience",
         },
       ],
     },
   ];
 
+  const handleDownloadInvoice = () => {
+    if (invoiceRef.current) {
+      toPng(invoiceRef.current)
+        .then((dataUrl) => {
+          const link = document.createElement("a");
+          link.download = `invoice-${selectedBooking?.bookingNo}.png`;
+          link.href = dataUrl;
+          link.click();
+        })
+        .catch((err) => {
+          console.error("Error generating invoice:", err);
+        });
+    }
+  };
+
+  const InvoiceModal = ({ booking }) => {
+    if (!booking) return null;
+
+    return (
+      <Modal
+        title="Booking Invoice"
+        open={invoiceModalVisible}
+        onCancel={() => setInvoiceModalVisible(false)}
+        width={800}
+        footer={[
+          <Button key="print" icon={<FaPrint />} onClick={() => window.print()}>
+            Print
+          </Button>,
+          <Button
+            key="download"
+            type="primary"
+            icon={<FaDownload />}
+            onClick={handleDownloadInvoice}
+          >
+            Download
+          </Button>,
+          <Button
+            key="share"
+            icon={<FaShareAlt />}
+            onClick={() => alert("Share functionality to be implemented")}
+          >
+            Share
+          </Button>,
+        ]}
+      >
+        <div ref={invoiceRef} className="bg-white p-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-2xl font-bold text-[#061A6E]">
+                Fast Track Booking
+              </h1>
+              <p className="text-gray-500">Invoice #{booking.bookingNo}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Issued on</p>
+              <p className="font-medium">
+                {new Date(booking.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Hotel Information</h3>
+              <p className="font-medium">{booking.hotelName}</p>
+              <p className="text-gray-600">{booking.roomCategoryName}</p>
+              <p className="text-gray-600">Room: {booking.roomNumberName}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Guest Information</h3>
+              <p className="font-medium">{booking.fullName}</p>
+              <p className="text-gray-600">{booking.email}</p>
+              <p className="text-gray-600">{booking.phone}</p>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">Booking Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border rounded-lg p-4">
+                <p className="text-gray-500 text-sm">Check-in</p>
+                <p className="font-medium">
+                  {new Date(booking.checkInDate).toLocaleDateString()}
+                </p>
+                <p className="text-sm">After 12:00 PM</p>
+              </div>
+              <div className="border rounded-lg p-4">
+                <p className="text-gray-500 text-sm">Check-out</p>
+                <p className="font-medium">
+                  {new Date(booking.checkOutDate).toLocaleDateString()}
+                </p>
+                <p className="text-sm">Before 12:00 PM</p>
+              </div>
+              <div className="border rounded-lg p-4">
+                <p className="text-gray-500 text-sm">Duration</p>
+                <p className="font-medium">
+                  {booking.nights} night{booking.nights > 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">Payment Summary</h3>
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left p-3">Description</th>
+                    <th className="text-right p-3">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t">
+                    <td className="p-3">Room ({booking.nights} nights)</td>
+                    <td className="p-3 text-right">
+                      ৳{booking.roomPrice.toLocaleString()}
+                    </td>
+                  </tr>
+                  {booking.isKitchen && (
+                    <tr className="border-t">
+                      <td className="p-3">Kitchen</td>
+                      <td className="p-3 text-right">
+                        ৳{booking.kitchenTotalBill.toLocaleString()}
+                      </td>
+                    </tr>
+                  )}
+                  {booking.extraBed && (
+                    <tr className="border-t">
+                      <td className="p-3">Extra Bed</td>
+                      <td className="p-3 text-right">
+                        ৳{booking.extraBedTotalBill.toLocaleString()}
+                      </td>
+                    </tr>
+                  )}
+                  <tr className="border-t font-semibold">
+                    <td className="p-3">Total</td>
+                    <td className="p-3 text-right">
+                      ৳{booking.totalBill.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr className="border-t">
+                    <td className="p-3">Advance Paid</td>
+                    <td className="p-3 text-right">
+                      ৳{booking.advancePayment.toLocaleString()}
+                    </td>
+                  </tr>
+                  <tr className="border-t font-semibold bg-gray-50">
+                    <td className="p-3">Balance Due</td>
+                    <td className="p-3 text-right">
+                      ৳{booking.duePayment.toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Payment Method</h3>
+              <p>{booking.paymentMethod}</p>
+              {booking.transactionId && (
+                <p>Transaction ID: {booking.transactionId}</p>
+              )}
+            </div>
+            <div className="flex flex-col items-center">
+              <QRCode
+                value={`Booking ID: ${booking.bookingID}\nHotel: ${booking.hotelName}\nGuest: ${booking.fullName}`}
+                size={120}
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                Scan for booking details
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-4 border-t text-center text-sm text-gray-500">
+            <p>Thank you for your booking!</p>
+            <p>For any inquiries, please contact our customer support.</p>
+          </div>
+        </div>
+      </Modal>
+    );
+  };
+
   const BookingDetailCard = ({ booking }) => {
-    const steps = [
+    const bookingStatusSteps = [
       {
         title: "Booking Confirmed",
         description: "Your booking has been confirmed",
+        status: "finish",
       },
       {
         title: "Payment Processed",
@@ -140,126 +350,223 @@ export default function ProfilePage() {
           booking.paymentMethod === "Pay Later at Hotel"
             ? "You will pay at the hotel"
             : "Payment completed successfully",
+        status: booking.statusID === 1 ? "wait" : "finish",
       },
       {
         title: "Ready for Check-in",
         description: `Check-in after ${new Date(
           booking.checkInDate
-        ).toLocaleTimeString()}`,
+        ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+        status: booking.statusID === 2 ? "process" : "wait",
       },
     ];
+
+    // Add this function to your ProfilePage component
+    // Add this function to your ProfilePage component
+    const handleCancelBooking = async (bookingId, canceledBy, reason) => {
+      try {
+        const response = await coreAxios.put(`/web/booking/soft/${bookingId}`, {
+          canceledBy,
+          reason: reason || "N/A",
+        });
+
+        const updatedBooking = response.data.updatedBooking;
+
+        if (updatedBooking) {
+          setBookings(
+            bookings.map((booking) =>
+              booking._id === bookingId ? updatedBooking : booking
+            )
+          );
+
+          if (selectedBooking?._id === bookingId) {
+            setSelectedBooking(updatedBooking);
+          }
+
+          message.success("Booking cancelled successfully");
+
+          // Close the modal (ensure this state exists in your component)
+          setIsCancelModalOpen(false);
+        } else {
+          message.error("Failed to cancel booking");
+        }
+      } catch (error) {
+        console.error("Cancellation failed:", error);
+        message.error(
+          error.response?.data?.error || "Failed to cancel booking"
+        );
+      }
+    };
 
     return (
       <div className="space-y-6">
         <Card>
           <div className="flex flex-col md:flex-row gap-6">
-            <div className="w-full md:w-1/3 h-64 bg-gray-200 rounded-lg overflow-hidden">
-              <div className="w-full h-full bg-gradient-to-r from-[#061A6E] to-[#0d2b9e] flex items-center justify-center text-white">
-                <FaHome className="text-4xl" />
-              </div>
+            <div className="w-full md:w-1/3 h-64 relative rounded-lg overflow-hidden">
+              {booking.hotelImage ? (
+                <Image
+                  src={booking.hotelImage}
+                  alt={booking.hotelName}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-r from-[#061A6E] to-[#0d2b9e] flex items-center justify-center text-white">
+                  <FaHome className="text-4xl" />
+                </div>
+              )}
             </div>
 
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-[#061A6E] mb-2">
-                {booking.hotelName}
-              </h2>
-              <p className="text-lg text-gray-600 mb-4">
-                {booking.roomCategoryName}
-              </p>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#061A6E] mb-1">
+                    {booking.hotelName}
+                  </h2>
+                  <p className="text-lg text-gray-600">
+                    {booking.roomCategoryName}
+                  </p>
+                </div>
+                <Tag
+                  color={
+                    booking.statusID === 1
+                      ? "orange"
+                      : booking.statusID === 2
+                      ? "green"
+                      : "red"
+                  }
+                  className="text-sm font-medium"
+                >
+                  {booking.statusID === 1
+                    ? "Pending"
+                    : booking.statusID === 2
+                    ? "Confirmed"
+                    : "Cancelled"}
+                </Tag>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-[#061A6E]">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-[#061A6E] text-lg">
                     Booking Information
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <FaCalendarAlt className="text-[#061A6E]" />
-                    <span>
+                  <Descriptions column={1} size="small">
+                    <Descriptions.Item label="Check-in/Check-out">
                       {new Date(booking.checkInDate).toLocaleDateString()} -{" "}
                       {new Date(booking.checkOutDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaBed className="text-[#061A6E]" />
-                    <span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Duration">
                       {booking.nights} night{booking.nights > 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaUserFriends className="text-[#061A6E]" />
-                    <span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Guests">
                       {booking.adults} adult{booking.adults > 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  {booking.children > 0 && (
-                    <div className="flex items-center gap-2">
-                      <FaChild className="text-[#061A6E]" />
-                      <span>
-                        {booking.children} child
-                        {booking.children > 1 ? "ren" : ""}
-                      </span>
-                    </div>
-                  )}
+                      {booking.children > 0 &&
+                        `, ${booking.children} child${
+                          booking.children > 1 ? "ren" : ""
+                        }`}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Room Number">
+                      {booking.roomNumberName || "To be assigned"}
+                    </Descriptions.Item>
+                  </Descriptions>
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-[#061A6E]">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-[#061A6E] text-lg">
                     Payment Details
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <FaMoneyBillWave className="text-[#061A6E]" />
-                    <span>Total: ৳{booking.totalBill.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaWallet className="text-[#061A6E]" />
-                    <span>Payment: {booking.paymentMethod}</span>
-                  </div>
-                  {booking.isKitchen && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#061A6E]">•</span>
-                      <span>Kitchen: ৳{booking.kitchenTotalBill}</span>
-                    </div>
-                  )}
-                  {booking.extraBed && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#061A6E]">•</span>
-                      <span>Extra Bed: ৳{booking.extraBedTotalBill}</span>
-                    </div>
-                  )}
+                  <Descriptions column={1} size="small">
+                    <Descriptions.Item label="Total Amount">
+                      ৳{booking.totalBill.toLocaleString()}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Payment Method">
+                      {booking.paymentMethod}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Advance Paid">
+                      ৳{booking.advancePayment.toLocaleString()}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Balance Due">
+                      ৳{booking.duePayment.toLocaleString()}
+                    </Descriptions.Item>
+                  </Descriptions>
                 </div>
               </div>
 
               <div className="mb-6">
-                <h3 className="font-semibold text-[#061A6E] mb-2">
+                <h3 className="font-semibold text-[#061A6E] text-lg mb-3">
                   Contact Information
                 </h3>
-                <div className="flex items-center gap-2 mb-1">
-                  <FaUser className="text-[#061A6E]" />
-                  <span>{booking.fullName}</span>
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <FaPhone className="text-[#061A6E]" />
-                  <span>{booking.phone}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaEnvelope className="text-[#061A6E]" />
-                  <span>{booking.email}</span>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg">
+                    <FaUser className="text-[#061A6E]" />
+                    <span>{booking.fullName}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg">
+                    <FaPhone className="text-[#061A6E]" />
+                    <span>{booking.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg">
+                    <FaEnvelope className="text-[#061A6E]" />
+                    <span>{booking.email}</span>
+                  </div>
                 </div>
               </div>
 
-              <Button
-                type="primary"
-                icon={<FaFileInvoice />}
-                className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10">
-                Download Invoice
-              </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="primary"
+                  icon={<FaFileInvoice />}
+                  className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10"
+                  onClick={() => setInvoiceModalVisible(true)}
+                >
+                  View Invoice
+                </Button>
+                <Button icon={<FaPhone />} className="h-10">
+                  Contact Hotel
+                </Button>
+
+                {booking.statusID === 1 && (
+                  <Button
+                    danger
+                    className="h-10"
+                    onClick={() => {
+                      Modal.confirm({
+                        title: "Confirm Cancellation",
+                        content:
+                          "Are you sure you want to cancel this booking?",
+                        okText: "Confirm",
+                        cancelText: "Go Back",
+                        onOk: () => handleCancelBooking(booking._id),
+                      });
+                    }}
+                  >
+                    Cancel Booking
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </Card>
 
         <Card title="Booking Status" className="mt-6">
-          <Steps current={1} items={steps} responsive={true} className="mt-4" />
+          <Steps
+            current={
+              booking.statusID === 1 ? 0 : booking.statusID === 2 ? 1 : 2
+            }
+          >
+            {bookingStatusSteps.map((step, index) => (
+              <Step
+                key={index}
+                title={step.title}
+                description={step.description}
+                status={step.status}
+              />
+            ))}
+          </Steps>
         </Card>
+
+        <InvoiceModal booking={booking} />
       </div>
     );
   };
@@ -271,7 +578,7 @@ export default function ProfilePage() {
           <h2 className="text-2xl font-bold text-[#061A6E]">Your Bookings</h2>
           {[1, 2, 3].map((i) => (
             <Card key={i} className="hover:shadow-lg transition-shadow">
-              <Skeleton active paragraph={{ rows: 4 }} />
+              <Skeleton active avatar paragraph={{ rows: 3 }} />
             </Card>
           ))}
         </div>
@@ -280,53 +587,103 @@ export default function ProfilePage() {
 
     return (
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-[#061A6E]">Your Bookings</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-[#061A6E]">Your Bookings</h2>
+          <Button
+            type="primary"
+            className="bg-[#061A6E]"
+            onClick={() => router.push("/hotels")}
+          >
+            Book New Stay
+          </Button>
+        </div>
 
         {bookings.length === 0 ? (
           <Card className="text-center py-12">
-            <p className="text-gray-500">{`You don't have any bookings yet`}</p>
-            <Button
-              type="primary"
-              className="mt-4 bg-[#061A6E]"
-              onClick={() => router.push("/hotels")}>
-              Explore Hotels
-            </Button>
+            <div className="max-w-md mx-auto">
+              <Image
+                src="/empty-booking.svg"
+                alt="No bookings"
+                width={200}
+                height={200}
+                className="mx-auto mb-6"
+              />
+              <h3 className="text-xl font-semibold mb-2">No bookings yet</h3>
+              <p className="text-gray-600 mb-6">
+                You haven't made any bookings yet. Start exploring our hotels to
+                find your perfect stay.
+              </p>
+              <Button
+                type="primary"
+                className="bg-[#061A6E]"
+                onClick={() => router.push("/hotels")}
+              >
+                Explore Hotels
+              </Button>
+            </div>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {bookings.map((booking) => (
-              <motion.div
+          <List
+            itemLayout="vertical"
+            size="large"
+            dataSource={bookings}
+            renderItem={(booking) => (
+              <List.Item
                 key={booking._id}
-                whileHover={{ y: -5 }}
-                className="cursor-pointer"
-                onClick={() => setSelectedBooking(booking)}>
-                <Card className="hover:shadow-lg transition-shadow">
-                  <div className="flex flex-col md:flex-row gap-6">
-                    <div className="w-full md:w-1/3 h-48 bg-gray-200 rounded-lg overflow-hidden">
-                      <div className="w-full h-full bg-gradient-to-r from-[#061A6E] to-[#0d2b9e] flex items-center justify-center text-white">
-                        <FaHome className="text-4xl" />
+                extra={
+                  <div className="hidden md:block w-48 h-32 relative">
+                    {booking.hotelImage ? (
+                      <Image
+                        src={booking.hotelImage}
+                        alt={booking.hotelName}
+                        fill
+                        className="object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-r from-[#061A6E] to-[#0d2b9e] flex items-center justify-center text-white rounded-lg">
+                        <FaHome className="text-2xl" />
                       </div>
+                    )}
+                  </div>
+                }
+              >
+                <List.Item.Meta
+                  avatar={
+                    <Avatar
+                      size="large"
+                      src={booking.hotelImage}
+                      icon={<FaHome />}
+                    />
+                  }
+                  title={
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="cursor-pointer hover:text-[#0d2b9e]"
+                        onClick={() => setSelectedBooking(booking)}
+                      >
+                        {booking.hotelName}
+                      </span>
+                      <Tag
+                        color={
+                          booking.statusID === 1
+                            ? "orange"
+                            : booking.statusID === 2
+                            ? "green"
+                            : "red"
+                        }
+                      >
+                        {booking.statusID === 1
+                          ? "Pending"
+                          : booking.statusID === 2
+                          ? "Confirmed"
+                          : "Cancelled"}
+                      </Tag>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <h3 className="text-xl font-bold text-[#061A6E]">
-                          {booking.hotelName}
-                        </h3>
-                        <Badge
-                          status={
-                            booking.statusID === 1 ? "success" : "warning"
-                          }
-                          text={
-                            booking.statusID === 1 ? "Confirmed" : "Pending"
-                          }
-                        />
-                      </div>
-                      <p className="text-gray-600 mb-4">
-                        {booking.roomCategoryName}
-                      </p>
-
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                        <div className="flex items-center gap-2">
+                  }
+                  description={
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-4">
+                        <div className="flex items-center gap-2 text-sm">
                           <FaCalendarAlt className="text-[#061A6E]" />
                           <span>
                             {new Date(booking.checkInDate).toLocaleDateString()}{" "}
@@ -336,36 +693,51 @@ export default function ProfilePage() {
                             ).toLocaleDateString()}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 text-sm">
                           <FaBed className="text-[#061A6E]" />
                           <span>
                             {booking.nights} night
                             {booking.nights > 1 ? "s" : ""}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <FaMoneyBillWave className="text-[#061A6E]" />
-                          <span className="font-bold">
-                            ৳{booking.totalBill.toLocaleString()}
+                        <div className="flex items-center gap-2 text-sm">
+                          <FaUserFriends className="text-[#061A6E]" />
+                          <span>
+                            {booking.adults} adult
+                            {booking.adults > 1 ? "s" : ""}
+                            {booking.children > 0 &&
+                              `, ${booking.children} child${
+                                booking.children > 1 ? "ren" : ""
+                              }`}
                           </span>
                         </div>
                       </div>
-
-                      <Button
-                        type="primary"
-                        className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedBooking(booking);
-                        }}>
-                        View Details
-                      </Button>
+                      <div className="flex items-center gap-2 text-sm">
+                        <FaMoneyBillWave className="text-[#061A6E]" />
+                        <span className="font-semibold">
+                          ৳{booking.totalBill.toLocaleString()}
+                        </span>
+                        {booking.paymentMethod && (
+                          <span className="text-gray-500">
+                            • Paid via {booking.paymentMethod}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+                  }
+                />
+                <div className="mt-4">
+                  <Button
+                    type="primary"
+                    className="bg-[#061A6E] hover:bg-[#0d2b9e]"
+                    onClick={() => setSelectedBooking(booking)}
+                  >
+                    View Details
+                  </Button>
+                </div>
+              </List.Item>
+            )}
+          />
         )}
       </div>
     );
@@ -377,14 +749,20 @@ export default function ProfilePage() {
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <Skeleton.Avatar active size={96} />
-            <Skeleton active paragraph={{ rows: 2 }} />
+            <div className="space-y-4">
+              <Skeleton.Input active size="large" />
+              <Skeleton.Input active size="default" />
+              <Skeleton.Button active />
+            </div>
           </div>
           {[1, 2, 3].map((i) => (
             <div key={i} className="space-y-4">
               <Skeleton.Input active block style={{ height: 28, width: 200 }} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[1, 2].map((j) => (
-                  <Skeleton key={j} active paragraph={{ rows: 2 }} />
+                  <Card key={j}>
+                    <Skeleton active avatar paragraph={{ rows: 1 }} />
+                  </Card>
                 ))}
               </div>
               {i < 3 && <Divider />}
@@ -397,17 +775,24 @@ export default function ProfilePage() {
     return (
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          <Avatar size={96} className="bg-[#061A6E] text-white text-4xl">
+          <Avatar
+            size={96}
+            className="bg-[#061A6E] text-white text-4xl shadow-md"
+          >
             {user?.charAt(0).toUpperCase()}
           </Avatar>
           <div>
             <h2 className="text-2xl font-bold text-[#061A6E]">{user}</h2>
             <p className="text-gray-600">{mail}</p>
-            <Button
-              type="primary"
-              className="mt-4 bg-[#061A6E] hover:bg-[#0d2b9e] h-10">
-              Edit Profile
-            </Button>
+            <div className="flex gap-3 mt-4">
+              <Button
+                type="primary"
+                className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10"
+              >
+                Edit Profile
+              </Button>
+              <Button className="h-10">Change Photo</Button>
+            </div>
           </div>
         </div>
 
@@ -421,16 +806,22 @@ export default function ProfilePage() {
                 <motion.div
                   key={idx}
                   whileHover={{ y: -4 }}
-                  className="cursor-pointer">
-                  <Card hoverable className="h-full">
+                  className="cursor-pointer"
+                >
+                  <Card
+                    hoverable
+                    className="h-full transition-all hover:shadow-md"
+                  >
                     <div className="flex items-start gap-4">
                       <div className="p-3 bg-[#061A6E]/10 rounded-full">
                         {item.icon}
                       </div>
                       <div>
-                        <h4 className="font-medium">{item.title}</h4>
+                        <h4 className="font-medium text-gray-900">
+                          {item.title}
+                        </h4>
                         <p className="text-gray-500 text-sm">
-                          Manage your {item.title.toLowerCase()}
+                          {item.description}
                         </p>
                       </div>
                     </div>
@@ -448,16 +839,28 @@ export default function ProfilePage() {
   const WishListCard = () => {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-[#061A6E] mb-4">
-          Your Wish List
-        </h2>
-        <p className="text-gray-600 mb-6">{`You don't have any saved hotels yet`}</p>
-        <Button
-          type="primary"
-          className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10"
-          onClick={() => router.push("/hotels")}>
-          Explore Hotels
-        </Button>
+        <div className="max-w-md mx-auto">
+          <Image
+            src="/empty-wishlist.svg"
+            alt="Empty wishlist"
+            width={200}
+            height={200}
+            className="mx-auto mb-6"
+          />
+          <h2 className="text-2xl font-bold text-[#061A6E] mb-4">
+            Your Wish List is Empty
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Save your favorite hotels to easily find them later
+          </p>
+          <Button
+            type="primary"
+            className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10"
+            onClick={() => router.push("/hotels")}
+          >
+            Browse Hotels
+          </Button>
+        </div>
       </div>
     );
   };
@@ -465,13 +868,27 @@ export default function ProfilePage() {
   const ReviewsCard = () => {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-[#061A6E] mb-4">Your Reviews</h2>
-        <p className="text-gray-600 mb-6">
-          {` You haven't written any reviews yet`}
-        </p>
-        <Button type="primary" className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10">
-          Write a Review
-        </Button>
+        <div className="max-w-md mx-auto">
+          <Image
+            src="/empty-reviews.svg"
+            alt="No reviews"
+            width={200}
+            height={200}
+            className="mx-auto mb-6"
+          />
+          <h2 className="text-2xl font-bold text-[#061A6E] mb-4">
+            No Reviews Yet
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Share your experience to help other travelers
+          </p>
+          <Button
+            type="primary"
+            className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10"
+          >
+            Write Your First Review
+          </Button>
+        </div>
       </div>
     );
   };
@@ -487,48 +904,56 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Profile Header */}
-      <div className="bg-[#061A6E] text-white py-20 px-4 md:px-12">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <Avatar
-              size={64}
-              className="bg-white text-[#061A6E] text-2xl font-bold">
-              {user?.charAt(0).toUpperCase()}
-            </Avatar>
-            <div>
-              <h1 className="text-2xl font-bold">Welcome, {user || "User"}</h1>
-              <p className="text-blue-100">{mail}</p>
+      <div className="bg-gradient-to-r from-[#061A6E] to-[#0d2b9e] text-white py-16 px-4 md:px-12 mt-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <Avatar
+                size={64}
+                className="bg-white text-[#061A6E] text-2xl font-bold shadow-lg"
+              >
+                {user?.charAt(0).toUpperCase()}
+              </Avatar>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold">
+                  Welcome back, {user || "User"}
+                </h1>
+                <p className="text-blue-100">{mail}</p>
+              </div>
             </div>
+            <Badge
+              count="Genius Level 1"
+              className="hidden md:block bg-yellow-400 text-[#061A6E] font-medium px-4 py-2 rounded-full"
+            />
           </div>
-          <Badge
-            count="Genius Level 1"
-            className="bg-yellow-400 text-[#061A6E] font-medium px-4 py-2 rounded-full"
-          />
         </div>
       </div>
 
       {/* Navigation Tabs */}
       <div className="max-w-6xl mx-auto px-4 -mt-8">
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="flex overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                className={`px-6 py-4 font-medium flex items-center gap-2 min-w-max ${
-                  selectedTab === tab.id
-                    ? "text-[#061A6E] border-b-2 border-[#061A6E]"
-                    : "text-gray-500 hover:text-[#061A6E]"
-                }`}
-                onClick={() => {
-                  setSelectedTab(tab.id);
-                  setSelectedBooking(null);
-                }}>
-                {tab.icon}
-                {tab.name}
-              </button>
+        <Card className="rounded-xl shadow-md">
+          <Tabs
+            activeKey={selectedTab}
+            onChange={(key) => {
+              setSelectedTab(key);
+              setSelectedBooking(null);
+            }}
+            tabBarStyle={{ marginBottom: 0 }}
+            className="profile-tabs"
+          >
+            {navItems.map((item) => (
+              <TabPane
+                key={item.key}
+                tab={
+                  <span className="flex items-center gap-2">
+                    {item.icon}
+                    {item.label}
+                  </span>
+                }
+              />
             ))}
-          </div>
-        </div>
+          </Tabs>
+        </Card>
       </div>
 
       {/* Content Section */}
@@ -540,7 +965,8 @@ export default function ProfilePage() {
               <Button
                 icon={<FaArrowLeft />}
                 onClick={() => setSelectedBooking(null)}
-                className="flex items-center gap-2 mb-6">
+                className="flex items-center gap-2 mb-6"
+              >
                 Back to Bookings
               </Button>
               <BookingDetailCard booking={selectedBooking} />

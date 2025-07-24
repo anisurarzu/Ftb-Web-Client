@@ -72,18 +72,28 @@ const HotelsDetailsContent = () => {
 
   const toggleFavorite = () => setFavorite(!favorite);
 
-  const addRoom = (roomOption, roomType) => {
+  // In the addRoom function (hotelDetails page):
+  const addRoom = (category, priceRange) => {
+    const priceForStay = priceRange.price * nights; // Calculate total price for stay duration
+
     const newRoom = {
-      ...roomOption,
-      roomType: roomType.name,
-      roomTypeId: roomType.id,
-      roomId: `room-${roomType.id}-${roomOption.id}`,
-      roomImages: roomType.images,
-      description: roomType.description,
-      amenities: roomType.amenities,
-      roomNumber: `RN-${Date.now()}-${roomType.id}`,
-      price: roomOption.price,
-      taxes: roomOption.taxes,
+      categoryId: category._id,
+      categoryName: category.categoryName,
+      description: category.categoryDetails,
+      images: category.images,
+      amenities: category.amenities,
+      price: priceForStay, // Now storing total price for the stay
+      pricePerNight: priceRange.price, // Keep original price per night
+      taxes: priceRange.taxes,
+      discountPercent: priceRange.discountPercent,
+      dates: priceRange.dates,
+      adultCount: category.adultCount, // Max adults allowed
+      childCount: category.childCount, // Max children allowed
+      roomId: `room-${category._id}-${Date.now()}`,
+      roomType: category.categoryName,
+      roomTypeId: category._id,
+      roomNumber: `RN-${Date.now()}-${category._id}`,
+      nights: nights, // Add nights to room data
     };
     setSelectedRooms([...selectedRooms, newRoom]);
   };
@@ -102,73 +112,61 @@ const HotelsDetailsContent = () => {
   };
 
   const handleContinue = () => {
-  if (selectedRooms.length === 0) {
-    Modal.error({
-      title: "No Rooms Selected",
-      content: "Please select at least one room to continue",
-    });
-    return;
-  }
-
-  const bookingPayload = {
-    selectedRooms: selectedRooms.map((room) => ({
-      roomTypeId: room.roomTypeId,
-      roomType: room.roomType,
-      roomId: room.roomId,
-      roomNumber: room.roomNumber,
-      price: room.price,
-      description: room.description,
-      images: room.roomImages,
-      amenities: room.amenities,
-      optionType: room.type,
-      taxes: room.taxes,
-    })),
-    hotelName: hotel.name,
-    hotelId: hotel._id || hotel.hotelId, // Use either _id or hotelId
-    checkInDate: searchCriteria.checkIn.format("YYYY-MM-DD"),
-    checkOutDate: searchCriteria.checkOut.format("YYYY-MM-DD"),
-    nights: nights,
-    adults: searchCriteria.adults,
-    timestamp: new Date().toISOString(),
-  };
-
-  // Rest of the function remains the same
-  try {
-    sessionStorage.setItem("bookingData", JSON.stringify(bookingPayload));
-
-    if (!user) {
-      const modalInstance = Modal.confirm({
-        title: "Login Required",
-        content:
-          "You need to login to proceed with booking. Do you want to login now?",
-        okText: "Login",
-        cancelText: "Cancel",
-        onOk() {
-          modalInstance.destroy?.();
-          router.push(
-            `/login?redirect=${encodeURIComponent(
-              window.location.pathname + window.location.search
-            )}`
-          );
-        },
-        onCancel() {
-          modalInstance.destroy?.();
-          sessionStorage.removeItem("bookingData");
-        },
+    if (selectedRooms.length === 0) {
+      Modal.error({
+        title: "No Rooms Selected",
+        content: "Please select at least one room to continue",
       });
-    } else {
-      router.push("/checkout");
+      return;
     }
-  } catch (error) {
-    console.error("Error saving booking data:", error);
-    Modal.error({
-      title: "Booking Error",
-      content:
-        error.message ||
-        "Failed to save your booking details. Please try again.",
-    });
-  }
-};
+
+    const bookingPayload = {
+      selectedRooms,
+      hotelName: hotel.name,
+      hotelId: hotelId,
+      checkInDate: searchCriteria.checkIn.format("YYYY-MM-DD"),
+      checkOutDate: searchCriteria.checkOut.format("YYYY-MM-DD"),
+      nights: nights,
+      adults: searchCriteria.adults,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      sessionStorage.setItem("bookingData", JSON.stringify(bookingPayload));
+
+      if (!user) {
+        const modalInstance = Modal.confirm({
+          title: "Login Required",
+          content:
+            "You need to login to proceed with booking. Do you want to login now?",
+          okText: "Login",
+          cancelText: "Cancel",
+          onOk() {
+            modalInstance.destroy?.();
+            router.push(
+              `/login?redirect=${encodeURIComponent(
+                window.location.pathname + window.location.search
+              )}`
+            );
+          },
+          onCancel() {
+            modalInstance.destroy?.();
+            sessionStorage.removeItem("bookingData");
+          },
+        });
+      } else {
+        router.push("/checkout");
+      }
+    } catch (error) {
+      console.error("Error saving booking data:", error);
+      Modal.error({
+        title: "Booking Error",
+        content:
+          error.message ||
+          "Failed to save your booking details. Please try again.",
+      });
+    }
+  };
 
   // Skeleton Loading Component
   const SkeletonLoading = () => (
@@ -305,27 +303,29 @@ const HotelsDetailsContent = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
                 {/* Left Part: Slider */}
                 <div className="relative h-64 md:h-80">
-                  <Carousel
-                    arrows
-                    prevArrow={
-                      <LeftOutlined className="text-white bg-black bg-opacity-30 p-2 rounded-full" />
-                    }
-                    nextArrow={
-                      <RightOutlined className="text-white bg-black bg-opacity-30 p-2 rounded-full" />
-                    }
-                    className="rounded-lg overflow-hidden h-full"
-                  >
-                    {hotel.images.map((image, index) => (
-                      <div key={index} className="h-full">
-                        <img
-                          src={image}
-                          alt={`${hotel.name} ${index + 1}`}
-                          className="w-full h-[320px] object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    ))}
-                  </Carousel>
+                  {hotel.categories && hotel.categories.length > 0 && (
+                    <Carousel
+                      arrows
+                      prevArrow={
+                        <LeftOutlined className="text-white bg-black bg-opacity-30 p-2 rounded-full" />
+                      }
+                      nextArrow={
+                        <RightOutlined className="text-white bg-black bg-opacity-30 p-2 rounded-full" />
+                      }
+                      className="rounded-lg overflow-hidden h-full"
+                    >
+                      {hotel.categories[0].images.map((image, index) => (
+                        <div key={index} className="h-full">
+                          <img
+                            src={image.url}
+                            alt={`${hotel.name} ${index + 1}`}
+                            className="w-full h-[320px] object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                      ))}
+                    </Carousel>
+                  )}
                 </div>
 
                 {/* Right Part: Hotel Info */}
@@ -337,9 +337,9 @@ const HotelsDetailsContent = () => {
                       </h1>
                       <div className="flex items-center text-gray-600 mb-3">
                         <StarFilled className="text-yellow-500 mr-1" />
-                        <span className="mr-3 font-medium">{hotel.rating}</span>
+                        <span className="mr-3 font-medium">4.5</span>
                         <EnvironmentFilled className="mr-1" />
-                        <span>{hotel.location}</span>
+                        <span>Cox's Bazar</span>
                       </div>
                     </div>
                     <button
@@ -362,27 +362,30 @@ const HotelsDetailsContent = () => {
                   <div className="space-y-3">
                     <h3 className="font-semibold text-gray-800">Facilities</h3>
                     <div className="flex flex-wrap gap-2">
-                      {hotel.facilities && hotel.facilities.length > 0 ? (
-                        hotel.facilities.slice(0, 6).map((facility, index) => (
-                          <Tag
-                            key={index}
-                            color="blue"
-                            className="flex items-center text-xs"
-                          >
-                            <CheckOutlined className="mr-1" />
-                            {facility}
-                          </Tag>
-                        ))
+                      {hotel.categories && hotel.categories.length > 0 ? (
+                        hotel.categories[0].amenities
+                          .slice(0, 6)
+                          .map((amenity, index) => (
+                            <Tag
+                              key={index}
+                              color="blue"
+                              className="flex items-center text-xs"
+                            >
+                              <CheckOutlined className="mr-1" />
+                              {amenity}
+                            </Tag>
+                          ))
                       ) : (
                         <p className="text-gray-500 text-sm">
                           No facilities listed
                         </p>
                       )}
-                      {hotel.facilities && hotel.facilities.length > 6 && (
-                        <Tag className="text-xs">
-                          +{hotel.facilities.length - 6} more
-                        </Tag>
-                      )}
+                      {hotel.categories &&
+                        hotel.categories[0]?.amenities?.length > 6 && (
+                          <Tag className="text-xs">
+                            +{hotel.categories[0].amenities.length - 6} more
+                          </Tag>
+                        )}
                     </div>
                   </div>
 
@@ -393,7 +396,10 @@ const HotelsDetailsContent = () => {
                       Description
                     </h3>
                     <p className="text-gray-600 text-sm">
-                      {hotel.description || "No description available"}
+                      {hotel.categories && hotel.categories.length > 0
+                        ? hotel.categories[0].categoryDetails ||
+                          "No description available"
+                        : "No description available"}
                     </p>
                   </div>
                 </div>
@@ -402,26 +408,28 @@ const HotelsDetailsContent = () => {
 
             {/* Part 2: Bottom Section - Rooms */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              {/* <h2 className="text-xl font-semibold mb-6 text-gray-800">AVAILABLE ROOMS</h2> */}
+              <h2 className="text-xl font-semibold mb-6 text-gray-800">
+                AVAILABLE ROOM CATEGORIES
+              </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {hotel.roomTypes.map((room) => (
+                {hotel.categories?.map((category) => (
                   <div
-                    key={room.id}
+                    key={category._id}
                     className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-300 bg-white"
                   >
                     {/* Room Header */}
                     <div className="p-4">
                       <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                        {room.name}
+                        {category.categoryName}
                       </h3>
 
                       {/* Room Image */}
                       <div className="h-40 rounded-lg overflow-hidden mb-3">
-                        {room.roomImages && room.roomImages.length > 0 ? (
+                        {category.images && category.images.length > 0 ? (
                           <img
-                            src={room.roomImages[0]}
-                            alt={room.name}
+                            src={category.images[0].url}
+                            alt={category.categoryName}
                             className="w-full h-full object-cover"
                             loading="lazy"
                           />
@@ -437,18 +445,23 @@ const HotelsDetailsContent = () => {
                       {/* Room Description with Read More */}
                       <div className="mb-3">
                         <p className="text-gray-600 text-sm">
-                          {expandedDescriptions[room.id]
-                            ? room.description
-                            : `${room.description.substring(0, 100)}${
-                                room.description.length > 100 ? "..." : ""
+                          {expandedDescriptions[category._id]
+                            ? category.categoryDetails
+                            : `${
+                                category.categoryDetails?.substring(0, 100) ||
+                                ""
+                              }${
+                                category.categoryDetails?.length > 100
+                                  ? "..."
+                                  : ""
                               }`}
                         </p>
-                        {room.description.length > 100 && (
+                        {category.categoryDetails?.length > 100 && (
                           <button
-                            onClick={() => toggleDescription(room.id)}
+                            onClick={() => toggleDescription(category._id)}
                             className="text-blue-600 text-xs mt-1 hover:text-blue-800"
                           >
-                            {expandedDescriptions[room.id]
+                            {expandedDescriptions[category._id]
                               ? "Show less"
                               : "Read more"}
                           </button>
@@ -461,92 +474,100 @@ const HotelsDetailsContent = () => {
                           Room Amenities:
                         </h4>
                         <div className="flex flex-wrap gap-2">
-                          {room.amenities && room.amenities.length > 0 ? (
-                            room.amenities.slice(0, 4).map((amenity, index) => (
-                              <span
-                                key={index}
-                                className="flex items-center text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700"
-                              >
-                                <CheckOutlined className="text-green-500 mr-1 text-xs" />
-                                {amenity}
-                              </span>
-                            ))
+                          {category.amenities &&
+                          category.amenities.length > 0 ? (
+                            category.amenities
+                              .slice(0, 4)
+                              .map((amenity, index) => (
+                                <span
+                                  key={index}
+                                  className="flex items-center text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700"
+                                >
+                                  <CheckOutlined className="text-green-500 mr-1 text-xs" />
+                                  {amenity}
+                                </span>
+                              ))
                           ) : (
                             <span className="text-xs text-gray-500">
                               No amenities listed
                             </span>
                           )}
-                          {room.amenities && room.amenities.length > 4 && (
-                            <span className="text-xs text-gray-500">
-                              +{room.amenities.length - 4} more
-                            </span>
-                          )}
+                          {category.amenities &&
+                            category.amenities.length > 4 && (
+                              <span className="text-xs text-gray-500">
+                                +{category.amenities.length - 4} more
+                              </span>
+                            )}
                         </div>
                       </div>
 
-                      {/* Room Options */}
+                      {/* Room Capacity */}
+                      <div className="mb-4">
+                        <h4 className="font-medium mb-2 text-sm text-gray-700">
+                          Capacity:
+                        </h4>
+                        <div className="flex gap-4 text-xs">
+                          <span className="text-gray-600">
+                            Adults: {category.adultCount}
+                          </span>
+                          <span className="text-gray-600">
+                            Children: {category.childCount}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Price Ranges */}
                       <div className="space-y-3">
-                        {room.options && room.options.length > 0 ? (
-                          room.options.map((option) => (
+                        {category.priceRanges &&
+                        category.priceRanges.length > 0 ? (
+                          category.priceRanges.map((priceRange, index) => (
                             <div
-                              key={option.id}
+                              key={index}
                               className="border border-gray-200 rounded-lg p-3 bg-white hover:border-blue-200 transition-colors"
                             >
                               <div className="flex justify-between items-start mb-2">
                                 <div>
                                   <div className="flex items-center">
                                     <h4 className="font-medium text-sm mr-2 text-gray-800">
-                                      {option.type}
+                                      {new Date(
+                                        priceRange.dates[0]
+                                      ).toLocaleDateString()}{" "}
+                                      -{" "}
+                                      {new Date(
+                                        priceRange.dates[1]
+                                      ).toLocaleDateString()}
                                     </h4>
-                                    <span className="text-xs bg-gray-100 px-1 py-0.5 rounded text-gray-600">
-                                      {option.type === "Non-Refundable"
-                                        ? "Non-refundable"
-                                        : "Flexible"}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center text-xs text-gray-600 mt-1">
-                                    <span className="mr-1">
-                                      {option.adults} Adults
-                                    </span>
-                                    <span className="mx-1">•</span>
-                                    <span>
-                                      {option.breakfast
-                                        ? "Breakfast Included"
-                                        : "Room Only"}
-                                    </span>
                                   </div>
                                 </div>
                               </div>
 
-                              {option.discountPercent && (
+                              {priceRange.discountPercent && (
                                 <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded inline-block mb-2">
-                                  {option.discountPercent}% off
+                                  {priceRange.discountPercent}% off
                                 </div>
                               )}
 
                               <div className="flex justify-between items-end">
                                 <div>
-                                  {option.discount && (
-                                    <p className="text-xs text-blue-600 mb-1">
-                                      *{option.discount}
-                                    </p>
-                                  )}
                                   <p className="text-xs text-gray-500 line-through">
                                     BDT{" "}
-                                    {option.originalPrice?.toLocaleString() ||
-                                      "0"}
+                                    {Math.round(
+                                      priceRange.price /
+                                        (1 - priceRange.discountPercent / 100)
+                                    ).toLocaleString()}
                                   </p>
                                   <p className="text-base font-bold text-gray-800">
-                                    BDT {option.price?.toLocaleString() || "0"}
+                                    BDT{" "}
+                                    {priceRange.price?.toLocaleString() || "0"}
                                   </p>
                                   <p className="text-xs text-gray-500">
                                     + BDT{" "}
-                                    {option.taxes?.toLocaleString() || "0"}{" "}
+                                    {priceRange.taxes?.toLocaleString() || "0"}{" "}
                                     taxes & fees
                                   </p>
                                 </div>
                                 <button
-                                  onClick={() => addRoom(option, room)}
+                                  onClick={() => addRoom(category, priceRange)}
                                   className="bg-[#FACC48] hover:bg-[#e6c042] text-[#061A6E] px-3 py-1 rounded font-medium transition-colors text-xs shadow-sm"
                                 >
                                   Select
@@ -556,7 +577,7 @@ const HotelsDetailsContent = () => {
                           ))
                         ) : (
                           <div className="text-center py-4 text-gray-500">
-                            No room options available
+                            No pricing available
                           </div>
                         )}
                       </div>
@@ -587,10 +608,10 @@ const HotelsDetailsContent = () => {
                       <div className="flex justify-between items-start">
                         <div className="flex items-start">
                           <div className="w-16 h-16 rounded-md overflow-hidden mr-3 flex-shrink-0">
-                            {room.roomImages && room.roomImages.length > 0 ? (
+                            {room.images && room.images.length > 0 ? (
                               <img
-                                src={room.roomImages[0]}
-                                alt={room.roomType}
+                                src={room.images[0].url}
+                                alt={room.categoryName}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -603,12 +624,15 @@ const HotelsDetailsContent = () => {
                           </div>
                           <div>
                             <h4 className="font-medium text-sm text-gray-800">
-                              {room.roomType}
+                              {room.categoryName}
                             </h4>
-                            <p className="text-xs text-gray-600">{room.type}</p>
-                            {room.discount && (
+                            <p className="text-xs text-gray-600">
+                              {new Date(room.dates[0]).toLocaleDateString()} -{" "}
+                              {new Date(room.dates[1]).toLocaleDateString()}
+                            </p>
+                            {room.discountPercent && (
                               <p className="text-xs text-blue-600 mt-1">
-                                {room.discount}
+                                {room.discountPercent}% discount
                               </p>
                             )}
                           </div>

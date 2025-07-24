@@ -113,19 +113,22 @@ export default function CheckoutPage() {
         parsedData.selectedRooms = parsedData.selectedRooms.map((room) => {
           // Add default values for missing required fields
           return {
-            roomTypeId:
+            categoryId:
+              room.categoryId ||
               room.roomTypeId ||
               `temp-id-${Math.random().toString(36).substr(2, 9)}`,
+            categoryName: room.categoryName || room.roomType || "Standard Room",
             price: room.price || 1000, // Default price if missing or 0
+            images: room.images || [],
+            description: room.description || "",
             ...room,
           };
         });
 
         const room = parsedData.selectedRooms[0];
         const requiredRoomFields = {
-          roomTypeId: "string",
-          roomType: "string",
-          roomId: "string",
+          categoryId: "string",
+          categoryName: "string",
           price: "number",
         };
 
@@ -158,6 +161,8 @@ export default function CheckoutPage() {
         parsedData.checkOutDate = dayjs(parsedData.checkOutDate).toISOString();
 
         setBookingData(parsedData);
+
+        console.log("Booking data loaded successfully:", parsedData);
 
         // Set form values
         form.setFieldsValue({
@@ -220,9 +225,9 @@ export default function CheckoutPage() {
         email: values.email || "N/A",
         hotelName: bookingData.hotelName,
         hotelID: bookingData.hotelId,
-        roomCategoryID: room.roomTypeId,
-        roomCategoryName: room.roomType,
-        roomNumberID: room.roomId,
+        roomCategoryID: room.categoryId || room.roomTypeId,
+        roomCategoryName: room.categoryName || room.roomType,
+        roomNumberID: room.roomId || `temp-room-${Date.now()}`,
         roomNumberName: room.roomNumber || "Not Specified",
         roomPrice: room.price,
         checkInDate: bookingData.checkInDate,
@@ -449,11 +454,30 @@ export default function CheckoutPage() {
                   label={
                     <Text className="font-medium text-gray-700">Adults</Text>
                   }
-                  initialValue={1}
+                  initialValue={bookingData?.adults || 1}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter number of adults",
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const room = bookingData?.selectedRooms?.[0];
+                        if (!room || value <= (room.adultCount || 10)) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error(
+                            `Maximum ${room.adultCount} adults allowed for this room`
+                          )
+                        );
+                      },
+                    }),
+                  ]}
                 >
                   <InputNumber
                     min={1}
-                    max={10}
+                    max={bookingData?.selectedRooms?.[0]?.adultCount || 10}
                     size="large"
                     className="w-full rounded-lg h-12"
                   />
@@ -463,11 +487,30 @@ export default function CheckoutPage() {
                   label={
                     <Text className="font-medium text-gray-700">Children</Text>
                   }
-                  initialValue={0}
+                  initialValue={bookingData?.children || 0}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter number of children",
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const room = bookingData?.selectedRooms?.[0];
+                        if (!room || value <= (room.childCount || 5)) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error(
+                            `Maximum ${room.childCount} children allowed for this room`
+                          )
+                        );
+                      },
+                    }),
+                  ]}
                 >
                   <InputNumber
                     min={0}
-                    max={10}
+                    max={bookingData?.selectedRooms?.[0]?.childCount || 5}
                     size="large"
                     className="w-full rounded-lg h-12"
                   />
@@ -648,10 +691,10 @@ export default function CheckoutPage() {
                   {bookingData.selectedRooms.map((room, index) => (
                     <div key={index} className="mb-4">
                       <Text className="block text-gray-900 font-medium">
-                        {room.roomType}
+                        {room.categoryName || room.roomType}
                       </Text>
                       <Text className="text-gray-500 text-sm">
-                        {room.description}
+                        {room.description || room.categoryDetails}
                       </Text>
                       <Text className="block mt-2 text-lg font-semibold">
                         BDT {room.price.toLocaleString()}
