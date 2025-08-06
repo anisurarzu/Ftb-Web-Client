@@ -153,7 +153,7 @@ export default function CheckoutPage() {
       const finalTotalBill =
         totalBill + (isKitchen ? 500 : 0) + (extraBed ? 1000 : 0);
 
-      // Prepare booking payload with required fields
+      // Prepare booking payload
       const bookingPayload = {
         fullName: values.fullName,
         phone: values.phone,
@@ -164,8 +164,6 @@ export default function CheckoutPage() {
         hotelID: bookingData.hotelId,
         roomCategoryID: room.categoryId,
         roomCategoryName: room.categoryName,
-        roomNumberID: room.roomNumberID || "N/A", // Added this field
-        roomNumberName: room.roomNumberName || "N/A", // Added this field
         roomPrice: room.price,
         checkInDate: bookingData.checkInDate,
         checkOutDate: bookingData.checkOutDate,
@@ -177,7 +175,7 @@ export default function CheckoutPage() {
         duePayment: 0,
         paymentMethod: paymentMethods.find((p) => p.value === paymentMethod)
           ?.label,
-        transactionId: values.transactionId || "not available",
+        transactionId: "not available",
         paymentScreenshot: paymentScreenshot,
         isKitchen,
         extraBed,
@@ -191,14 +189,15 @@ export default function CheckoutPage() {
         statusID: 1,
       };
 
-      const response = await coreAxios.post("/web/booking", bookingPayload);
+      const response = await coreAxios.post("/bookings", bookingPayload);
+
       Modal.success({
         title: "Booking Confirmed!",
         content: (
           <div>
             <p>Your booking has been successfully confirmed.</p>
             <p className="mt-2">
-              Booking ID: <strong>{bookingPayload.bookingID}</strong>
+              Transaction ID: <strong>{values.transactionId}</strong>
             </p>
           </div>
         ),
@@ -585,7 +584,7 @@ const PaymentDetailsCard = ({
         )}
       </div>
 
-      <Form.Item
+      {/* <Form.Item
         name="transactionId"
         label={
           <Text className="font-medium text-gray-700">Transaction ID</Text>
@@ -603,7 +602,7 @@ const PaymentDetailsCard = ({
           className="rounded-lg h-12"
           placeholder={`Enter ${paymentMethod} Transaction ID`}
         />
-      </Form.Item>
+      </Form.Item> */}
 
       <Form.Item
         label={

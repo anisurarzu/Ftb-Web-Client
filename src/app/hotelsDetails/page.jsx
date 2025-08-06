@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, Suspense, useEffect } from "react";
 import dayjs from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import {
   StarFilled,
   EnvironmentFilled,
@@ -22,6 +24,10 @@ import { Carousel, Divider, Button, Modal, Spin, Tabs, Tag } from "antd";
 import { useAuth } from "@/context/AuthContext";
 import coreAxios from "@/components/coreAxios/Axios";
 
+// Extend dayjs with the plugins
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+
 const HotelsDetailsContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -33,14 +39,15 @@ const HotelsDetailsContent = () => {
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const { user } = useAuth();
 
+  // Parse dates ensuring they are Day.js objects
+  const parseDate = (dateString) => {
+    return dateString ? dayjs(dateString) : null;
+  };
+
   const searchCriteria = {
     location: searchParams.get("location") || "Cox's Bazar",
-    checkIn: searchParams.get("checkIn")
-      ? dayjs(searchParams.get("checkIn"))
-      : dayjs(),
-    checkOut: searchParams.get("checkOut")
-      ? dayjs(searchParams.get("checkOut"))
-      : dayjs().add(1, "day"),
+    checkIn: parseDate(searchParams.get("checkIn")) || dayjs(),
+    checkOut: parseDate(searchParams.get("checkOut")) || dayjs().add(1, "day"),
     adults: parseInt(searchParams.get("adults") || 2),
   };
 
@@ -72,9 +79,32 @@ const HotelsDetailsContent = () => {
 
   const toggleFavorite = () => setFavorite(!favorite);
 
-  // In the addRoom function (hotelDetails page):
-  const addRoom = (category, priceRange) => {
-    const priceForStay = priceRange.price * nights; // Calculate total price for stay duration
+  // Find the price range that matches the selected dates
+  const findMatchingPriceRange = (priceRanges) => {
+    if (!priceRanges || priceRanges.length === 0) return null;
+
+    return priceRanges.find((range) => {
+      const rangeStart = dayjs(range.dates[0]);
+      const rangeEnd = dayjs(range.dates[1]);
+      return (
+        searchCriteria.checkIn.isSameOrAfter(rangeStart, "day") &&
+        searchCriteria.checkOut.isSameOrBefore(rangeEnd, "day")
+      );
+    });
+  };
+
+  const addRoom = (category) => {
+    const matchingPriceRange = findMatchingPriceRange(category.priceRanges);
+
+    if (!matchingPriceRange) {
+      Modal.error({
+        title: "No Available Price",
+        content: "No price available for the selected dates",
+      });
+      return;
+    }
+
+    const priceForStay = matchingPriceRange.price * nights;
 
     const newRoom = {
       categoryId: category._id,
@@ -82,26 +112,42 @@ const HotelsDetailsContent = () => {
       description: category.categoryDetails,
       images: category.images,
       amenities: category.amenities,
-      price: priceForStay, // Now storing total price for the stay
-      pricePerNight: priceRange.price, // Keep original price per night
-      taxes: priceRange.taxes,
-      discountPercent: priceRange.discountPercent,
-      dates: priceRange.dates,
-      adultCount: category.adultCount, // Max adults allowed
-      childCount: category.childCount, // Max children allowed
-      roomId: `room-${category._id}-${Date.now()}`,
+      price: priceForStay,
+      pricePerNight: matchingPriceRange.price,
+      taxes: matchingPriceRange.taxes,
+      discountPercent: matchingPriceRange.discountPercent,
+      dates: [
+        searchCriteria.checkIn.format("YYYY-MM-DD"),
+        searchCriteria.checkOut.format("YYYY-MM-DD"),
+      ],
+      adultCount: category.adultCount,
+      childCount: category.childCount,
+      roomId: `room-${category._id}`,
       roomType: category.categoryName,
       roomTypeId: category._id,
-      roomNumber: `RN-${Date.now()}-${category._id}`,
-      nights: nights, // Add nights to room data
+      nights: nights,
     };
-    setSelectedRooms([...selectedRooms, newRoom]);
+
+    // Check if this room type is already selected
+    const existingIndex = selectedRooms.findIndex(
+      (room) => room.categoryId === category._id
+    );
+
+    if (existingIndex >= 0) {
+      // Replace the existing room with the new one
+      const updatedRooms = [...selectedRooms];
+      updatedRooms[existingIndex] = newRoom;
+      setSelectedRooms(updatedRooms);
+    } else {
+      // Add new room
+      setSelectedRooms([...selectedRooms, newRoom]);
+    }
   };
 
-  const removeRoom = (index) => {
-    const newRooms = [...selectedRooms];
-    newRooms.splice(index, 1);
-    setSelectedRooms(newRooms);
+  const removeRoom = (categoryId) => {
+    setSelectedRooms(
+      selectedRooms.filter((room) => room.categoryId !== categoryId)
+    );
   };
 
   const toggleDescription = (roomId) => {
@@ -413,177 +459,203 @@ const HotelsDetailsContent = () => {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {hotel.categories?.map((category) => (
-                  <div
-                    key={category._id}
-                    className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-300 bg-white"
-                  >
-                    {/* Room Header */}
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                        {category.categoryName}
-                      </h3>
+                {hotel.categories?.map((category) => {
+                  const matchingPriceRange = findMatchingPriceRange(
+                    category.priceRanges
+                  );
+                  const isSelected = selectedRooms.some(
+                    (room) => room.categoryId === category._id
+                  );
 
-                      {/* Room Image */}
-                      <div className="h-40 rounded-lg overflow-hidden mb-3">
-                        {category.images && category.images.length > 0 ? (
-                          <img
-                            src={category.images[0].url}
-                            alt={category.categoryName}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                            <span className="text-gray-400">
-                              No image available
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                  return (
+                    <div
+                      key={category._id}
+                      className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-300 bg-white"
+                    >
+                      {/* Room Header */}
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                          {category.categoryName}
+                        </h3>
 
-                      {/* Room Description with Read More */}
-                      <div className="mb-3">
-                        <p className="text-gray-600 text-sm">
-                          {expandedDescriptions[category._id]
-                            ? category.categoryDetails
-                            : `${
-                                category.categoryDetails?.substring(0, 100) ||
-                                ""
-                              }${
-                                category.categoryDetails?.length > 100
-                                  ? "..."
-                                  : ""
-                              }`}
-                        </p>
-                        {category.categoryDetails?.length > 100 && (
-                          <button
-                            onClick={() => toggleDescription(category._id)}
-                            className="text-blue-600 text-xs mt-1 hover:text-blue-800"
-                          >
-                            {expandedDescriptions[category._id]
-                              ? "Show less"
-                              : "Read more"}
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Room Amenities */}
-                      <div className="mb-4">
-                        <h4 className="font-medium mb-2 text-sm text-gray-700">
-                          Room Amenities:
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {category.amenities &&
-                          category.amenities.length > 0 ? (
-                            category.amenities
-                              .slice(0, 4)
-                              .map((amenity, index) => (
-                                <span
-                                  key={index}
-                                  className="flex items-center text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700"
-                                >
-                                  <CheckOutlined className="text-green-500 mr-1 text-xs" />
-                                  {amenity}
-                                </span>
-                              ))
+                        {/* Room Image */}
+                        <div className="h-40 rounded-lg overflow-hidden mb-3">
+                          {category.images && category.images.length > 0 ? (
+                            <img
+                              src={category.images[0].url}
+                              alt={category.categoryName}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
                           ) : (
-                            <span className="text-xs text-gray-500">
-                              No amenities listed
-                            </span>
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                              <span className="text-gray-400">
+                                No image available
+                              </span>
+                            </div>
                           )}
-                          {category.amenities &&
-                            category.amenities.length > 4 && (
+                        </div>
+
+                        {/* Room Description with Read More */}
+                        <div className="mb-3">
+                          <p className="text-gray-600 text-sm">
+                            {expandedDescriptions[category._id]
+                              ? category.categoryDetails
+                              : `${
+                                  category.categoryDetails?.substring(0, 100) ||
+                                  ""
+                                }${
+                                  category.categoryDetails?.length > 100
+                                    ? "..."
+                                    : ""
+                                }`}
+                          </p>
+                          {category.categoryDetails?.length > 100 && (
+                            <button
+                              onClick={() => toggleDescription(category._id)}
+                              className="text-blue-600 text-xs mt-1 hover:text-blue-800"
+                            >
+                              {expandedDescriptions[category._id]
+                                ? "Show less"
+                                : "Read more"}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Room Amenities */}
+                        <div className="mb-4">
+                          <h4 className="font-medium mb-2 text-sm text-gray-700">
+                            Room Amenities:
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {category.amenities &&
+                            category.amenities.length > 0 ? (
+                              category.amenities
+                                .slice(0, 4)
+                                .map((amenity, index) => (
+                                  <span
+                                    key={index}
+                                    className="flex items-center text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-700"
+                                  >
+                                    <CheckOutlined className="text-green-500 mr-1 text-xs" />
+                                    {amenity}
+                                  </span>
+                                ))
+                            ) : (
                               <span className="text-xs text-gray-500">
-                                +{category.amenities.length - 4} more
+                                No amenities listed
                               </span>
                             )}
+                            {category.amenities &&
+                              category.amenities.length > 4 && (
+                                <span className="text-xs text-gray-500">
+                                  +{category.amenities.length - 4} more
+                                </span>
+                              )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Room Capacity */}
-                      <div className="mb-4">
-                        <h4 className="font-medium mb-2 text-sm text-gray-700">
-                          Capacity:
-                        </h4>
-                        <div className="flex gap-4 text-xs">
-                          <span className="text-gray-600">
-                            Adults: {category.adultCount}
-                          </span>
-                          <span className="text-gray-600">
-                            Children: {category.childCount}
-                          </span>
+                        {/* Room Capacity */}
+                        <div className="mb-4">
+                          <h4 className="font-medium mb-2 text-sm text-gray-700">
+                            Capacity:
+                          </h4>
+                          <div className="flex gap-4 text-xs">
+                            <span className="text-gray-600">
+                              Adults: {category.adultCount}
+                            </span>
+                            <span className="text-gray-600">
+                              Children: {category.childCount}
+                            </span>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Price Ranges */}
-                      <div className="space-y-3">
-                        {category.priceRanges &&
-                        category.priceRanges.length > 0 ? (
-                          category.priceRanges.map((priceRange, index) => (
-                            <div
-                              key={index}
-                              className="border border-gray-200 rounded-lg p-3 bg-white hover:border-blue-200 transition-colors"
-                            >
+                        {/* Price Information */}
+                        <div className="border border-gray-200 rounded-lg p-3 bg-white hover:border-blue-200 transition-colors">
+                          {matchingPriceRange ? (
+                            <>
                               <div className="flex justify-between items-start mb-2">
                                 <div>
-                                  <div className="flex items-center">
-                                    <h4 className="font-medium text-sm mr-2 text-gray-800">
-                                      {new Date(
-                                        priceRange.dates[0]
-                                      ).toLocaleDateString()}{" "}
-                                      -{" "}
-                                      {new Date(
-                                        priceRange.dates[1]
-                                      ).toLocaleDateString()}
-                                    </h4>
-                                  </div>
+                                  <h4 className="font-medium text-sm text-gray-800">
+                                    {searchCriteria.checkIn.format(
+                                      "MMM D, YYYY"
+                                    )}{" "}
+                                    -{" "}
+                                    {searchCriteria.checkOut.format(
+                                      "MMM D, YYYY"
+                                    )}
+                                  </h4>
+                                  <p className="text-xs text-gray-500">
+                                    {nights} {nights > 1 ? "nights" : "night"}
+                                  </p>
                                 </div>
                               </div>
 
-                              {priceRange.discountPercent && (
+                              {matchingPriceRange.discountPercent && (
                                 <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded inline-block mb-2">
-                                  {priceRange.discountPercent}% off
+                                  {matchingPriceRange.discountPercent}% off
                                 </div>
                               )}
 
                               <div className="flex justify-between items-end">
                                 <div>
-                                  <p className="text-xs text-gray-500 line-through">
-                                    BDT{" "}
-                                    {Math.round(
-                                      priceRange.price /
-                                        (1 - priceRange.discountPercent / 100)
-                                    ).toLocaleString()}
-                                  </p>
+                                  {matchingPriceRange.discountPercent && (
+                                    <p className="text-xs text-gray-500 line-through">
+                                      BDT{" "}
+                                      {Math.round(
+                                        matchingPriceRange.price /
+                                          (1 -
+                                            matchingPriceRange.discountPercent /
+                                              100)
+                                      ).toLocaleString()}
+                                    </p>
+                                  )}
                                   <p className="text-base font-bold text-gray-800">
                                     BDT{" "}
-                                    {priceRange.price?.toLocaleString() || "0"}
+                                    {matchingPriceRange.price?.toLocaleString() ||
+                                      "0"}{" "}
+                                    / night
                                   </p>
                                   <p className="text-xs text-gray-500">
                                     + BDT{" "}
-                                    {priceRange.taxes?.toLocaleString() || "0"}{" "}
+                                    {matchingPriceRange.taxes?.toLocaleString() ||
+                                      "0"}{" "}
                                     taxes & fees
+                                  </p>
+                                  <p className="text-sm font-semibold mt-1">
+                                    Total: BDT{" "}
+                                    {(
+                                      matchingPriceRange.price * nights +
+                                      matchingPriceRange.taxes
+                                    ).toLocaleString()}
                                   </p>
                                 </div>
                                 <button
-                                  onClick={() => addRoom(category, priceRange)}
-                                  className="bg-[#FACC48] hover:bg-[#e6c042] text-[#061A6E] px-3 py-1 rounded font-medium transition-colors text-xs shadow-sm"
+                                  onClick={() =>
+                                    isSelected
+                                      ? removeRoom(category._id)
+                                      : addRoom(category)
+                                  }
+                                  className={`px-3 py-1 rounded font-medium transition-colors text-xs shadow-sm ${
+                                    isSelected
+                                      ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                                      : "bg-[#FACC48] hover:bg-[#e6c042] text-[#061A6E]"
+                                  }`}
                                 >
-                                  Select
+                                  {isSelected ? "Selected" : "Select"}
                                 </button>
                               </div>
+                            </>
+                          ) : (
+                            <div className="text-center py-2 text-gray-500">
+                              No price available for selected dates
                             </div>
-                          ))
-                        ) : (
-                          <div className="text-center py-4 text-gray-500">
-                            No pricing available
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -627,8 +699,8 @@ const HotelsDetailsContent = () => {
                               {room.categoryName}
                             </h4>
                             <p className="text-xs text-gray-600">
-                              {new Date(room.dates[0]).toLocaleDateString()} -{" "}
-                              {new Date(room.dates[1]).toLocaleDateString()}
+                              {dayjs(room.dates[0]).format("MMM D, YYYY")} -{" "}
+                              {dayjs(room.dates[1]).format("MMM D, YYYY")}
                             </p>
                             {room.discountPercent && (
                               <p className="text-xs text-blue-600 mt-1">
@@ -645,7 +717,7 @@ const HotelsDetailsContent = () => {
                             + BDT {room.taxes?.toLocaleString() || "0"} taxes
                           </p>
                           <button
-                            onClick={() => removeRoom(index)}
+                            onClick={() => removeRoom(room.categoryId)}
                             className="text-red-500 text-xs mt-1 hover:text-red-700"
                           >
                             Remove

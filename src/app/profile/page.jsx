@@ -47,6 +47,7 @@ import { toPng } from "html-to-image";
 import coreAxios from "@/components/coreAxios/Axios";
 import Image from "next/image";
 import { message } from "antd";
+import { toast } from "react-toastify";
 
 const { Step } = Steps;
 const { TabPane } = Tabs;
@@ -370,25 +371,27 @@ export default function ProfilePage() {
           reason: reason || "N/A",
         });
 
-        const updatedBooking = response.data.updatedBooking;
-
-        if (updatedBooking) {
-          setBookings(
-            bookings.map((booking) =>
-              booking._id === bookingId ? updatedBooking : booking
-            )
-          );
-
-          if (selectedBooking?._id === bookingId) {
-            setSelectedBooking(updatedBooking);
-          }
-
-          message.success("Booking cancelled successfully");
-
-          // Close the modal (ensure this state exists in your component)
-          setIsCancelModalOpen(false);
-        } else {
+        if (response.status !== 200) {
           message.error("Failed to cancel booking");
+        } else {
+          const updatedBooking = response.data.updatedBooking;
+
+          if (updatedBooking) {
+            setBookings(
+              bookings.map((booking) =>
+                booking._id === bookingId ? updatedBooking : booking
+              )
+            );
+
+            if (selectedBooking?._id === bookingId) {
+              setSelectedBooking(updatedBooking);
+            }
+
+            message.success("Booking cancelled successfully");
+
+            // Close the modal (ensure this state exists in your component)
+          } else {
+          }
         }
       } catch (error) {
         console.error("Cancellation failed:", error);
@@ -518,7 +521,16 @@ export default function ProfilePage() {
                   type="primary"
                   icon={<FaFileInvoice />}
                   className="bg-[#061A6E] hover:bg-[#0d2b9e] h-10"
-                  onClick={() => setInvoiceModalVisible(true)}
+                  disabled={booking.statusID !== 2}
+                  onClick={() => {
+                    if (booking.statusID === 2) {
+                      setInvoiceModalVisible(true);
+                    } else {
+                      toast.error(
+                        "Invoice is only available for confirmed bookings"
+                      );
+                    }
+                  }}
                 >
                   View Invoice
                 </Button>
