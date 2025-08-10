@@ -20,6 +20,7 @@ import {
 } from "@ant-design/icons";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Carousel, Divider, Button, Modal, Spin, Tabs, Tag } from "antd";
+import Image from "next/image";
 
 import { useAuth } from "@/context/AuthContext";
 import coreAxios from "@/components/coreAxios/Axios";
@@ -45,7 +46,7 @@ const HotelsDetailsContent = () => {
   };
 
   const searchCriteria = {
-    location: searchParams.get("location") || "Cox's Bazar",
+    location: searchParams.get("location") || "Cox&apos;s Bazar",
     checkIn: parseDate(searchParams.get("checkIn")) || dayjs(),
     checkOut: parseDate(searchParams.get("checkOut")) || dayjs().add(1, "day"),
     adults: parseInt(searchParams.get("adults") || 2),
@@ -361,11 +362,13 @@ const HotelsDetailsContent = () => {
                       className="rounded-lg overflow-hidden h-full"
                     >
                       {hotel.categories[0].images.map((image, index) => (
-                        <div key={index} className="h-full">
-                          <img
+                        <div key={index} className="h-full relative">
+                          <Image
                             src={image.url}
                             alt={`${hotel.name} ${index + 1}`}
-                            className="w-full h-[320px] object-cover"
+                            fill
+                            style={{ objectFit: "cover" }}
+                            className="w-full h-[320px]"
                             loading="lazy"
                           />
                         </div>
@@ -385,7 +388,7 @@ const HotelsDetailsContent = () => {
                         <StarFilled className="text-yellow-500 mr-1" />
                         <span className="mr-3 font-medium">4.5</span>
                         <EnvironmentFilled className="mr-1" />
-                        <span>Cox's Bazar</span>
+                        <span>Cox&apos;s Bazar</span>
                       </div>
                     </div>
                     <button
@@ -479,12 +482,14 @@ const HotelsDetailsContent = () => {
                         </h3>
 
                         {/* Room Image */}
-                        <div className="h-40 rounded-lg overflow-hidden mb-3">
+                        <div className="h-40 rounded-lg overflow-hidden mb-3 relative">
                           {category.images && category.images.length > 0 ? (
-                            <img
+                            <Image
                               src={category.images[0].url}
                               alt={category.categoryName}
-                              className="w-full h-full object-cover"
+                              fill
+                              style={{ objectFit: "cover" }}
+                              className="w-full h-full"
                               loading="lazy"
                             />
                           ) : (
@@ -679,12 +684,14 @@ const HotelsDetailsContent = () => {
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-start">
-                          <div className="w-16 h-16 rounded-md overflow-hidden mr-3 flex-shrink-0">
+                          <div className="w-16 h-16 rounded-md overflow-hidden mr-3 flex-shrink-0 relative">
                             {room.images && room.images.length > 0 ? (
-                              <img
+                              <Image
                                 src={room.images[0].url}
                                 alt={room.categoryName}
-                                className="w-full h-full object-cover"
+                                fill
+                                style={{ objectFit: "cover" }}
+                                className="w-full h-full"
                               />
                             ) : (
                               <div className="w-full h-full bg-gray-200 flex items-center justify-center">
