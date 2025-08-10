@@ -623,7 +623,7 @@ const PaymentDetailsCard = ({
         >
           {paymentScreenshot ? (
             <div className="p-4">
-              <img
+              <Img
                 src={paymentScreenshot}
                 alt="Payment screenshot"
                 className="max-h-40 mx-auto"

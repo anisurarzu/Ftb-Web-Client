@@ -282,7 +282,7 @@ const Homepage = ({ hotels, hotelList }) => {
                         onClick={() => handleCardClick(hotel)}
                       >
                         <Image
-                          src={hotel.image}
+                          src={hotel.image?.[0]}
                           alt={hotel.name}
                           fill
                           className="object-cover"
