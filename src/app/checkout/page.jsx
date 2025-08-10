@@ -1,7 +1,7 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   Input,
@@ -45,7 +45,7 @@ export default function CheckoutPage() {
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
 
-  const checkAuthAndData = useCallback(() => {
+  const checkAuthAndData = () => {
     const token = localStorage.getItem("token");
     const userInfo = localStorage.getItem("userInfo");
     const storedBookingData = sessionStorage.getItem("bookingData");
@@ -88,11 +88,11 @@ export default function CheckoutPage() {
       });
       return false;
     }
-  }, [router, form, user]);
+  };
 
   useEffect(() => {
     checkAuthAndData();
-  }, [checkAuthAndData]);
+  }, [router, form, user]);
 
   const beforeUpload = (file) => {
     const isImage = file.type.startsWith("image/");
@@ -541,7 +541,7 @@ const PaymentDetailsCard = ({
         {paymentMethod === "bKash" ? (
           <>
             <Text className="text-blue-700 block mb-1">
-              1. Open bKash app and go to &quot;Send Money&quot;
+              1. Open bKash app and go to "Send Money"
             </Text>
             <Text className="text-blue-700 block mb-1">
               2. Send money to: <strong>017XXXXXXXX</strong>
@@ -563,7 +563,7 @@ const PaymentDetailsCard = ({
         ) : (
           <>
             <Text className="text-blue-700 block mb-1">
-              1. Open Nagad app and go to &quot;Send Money&quot;
+              1. Open Nagad app and go to "Send Money"
             </Text>
             <Text className="text-blue-700 block mb-1">
               2. Send money to: <strong>016XXXXXXXX</strong>
@@ -623,7 +623,7 @@ const PaymentDetailsCard = ({
         >
           {paymentScreenshot ? (
             <div className="p-4">
-              <Img
+              <img
                 src={paymentScreenshot}
                 alt="Payment screenshot"
                 className="max-h-40 mx-auto"
