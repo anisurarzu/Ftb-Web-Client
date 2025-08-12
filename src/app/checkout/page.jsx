@@ -92,7 +92,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     checkAuthAndData();
-  }, [router, form, user]);
+  }, [checkAuthAndData]); // ✅ add dependency
 
   const beforeUpload = (file) => {
     const isImage = file.type.startsWith("image/");
@@ -541,7 +541,7 @@ const PaymentDetailsCard = ({
         {paymentMethod === "bKash" ? (
           <>
             <Text className="text-blue-700 block mb-1">
-              1. Open bKash app and go to "Send Money"
+              1. Open bKash app and go to &quot;Send Money&quot;
             </Text>
             <Text className="text-blue-700 block mb-1">
               2. Send money to: <strong>017XXXXXXXX</strong>
@@ -563,7 +563,7 @@ const PaymentDetailsCard = ({
         ) : (
           <>
             <Text className="text-blue-700 block mb-1">
-              1. Open Nagad app and go to "Send Money"
+              1. Open Nagad app and go to &quot;Send Money&quot;
             </Text>
             <Text className="text-blue-700 block mb-1">
               2. Send money to: <strong>016XXXXXXXX</strong>

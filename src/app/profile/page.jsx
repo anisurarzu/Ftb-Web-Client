@@ -622,8 +622,8 @@ export default function ProfilePage() {
               />
               <h3 className="text-xl font-semibold mb-2">No bookings yet</h3>
               <p className="text-gray-600 mb-6">
-                You haven't made any bookings yet. Start exploring our hotels to
-                find your perfect stay.
+                You {`haven't`} made any bookings yet. Start exploring our
+                hotels to find your perfect stay.
               </p>
               <Button
                 type="primary"
