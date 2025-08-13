@@ -92,7 +92,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     checkAuthAndData();
-  }, [checkAuthAndData]); // ✅ add dependency
+  }, []); // ✅ add dependency
 
   const beforeUpload = (file) => {
     const isImage = file.type.startsWith("image/");
